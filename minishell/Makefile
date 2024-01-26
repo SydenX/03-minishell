@@ -6,7 +6,7 @@
 #    By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/11/30 13:47:45 by jtollena          #+#    #+#              #
-#    Updated: 2024/01/23 14:09:17 by jtollena         ###   ########.fr        #
+#    Updated: 2024/01/26 11:56:08 by jtollena         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -19,7 +19,7 @@ INCLUDES = includes
 FLAGS = #-Wall -Wextra -Werror
 
 %.o: %.c
-	gcc $(FLAGS) -g -Ilibft -I $(INCLUDES) -c $< -o $@
+	gcc $(FLAGS) -g -Ilibft -I /Users/jtollena/.brew/opt/readline/include -I $(INCLUDES) -c $< -o $@
 
 all: $(NAME)
 
@@ -28,7 +28,7 @@ clean:
 	
 $(NAME): $(OBJS) $(INCLUDES)
 	make -C libft/
-	gcc $(FLAGS) -g -Llibft -lft -lreadline $(OBJS) -o $(NAME)
+	gcc $(FLAGS) -g -Llibft -lft -L/Users/jtollena/.brew/opt/readline/lib -lreadline $(OBJS) -o $(NAME)
 	make clean
 
 fclean: clean

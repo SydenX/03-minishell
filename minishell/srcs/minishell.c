@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/01/23 15:25:06 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/01/26 12:02:50 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,9 @@
 
 void	ctrlc_handler()
 {
+	printf("\n");
 	rl_on_new_line();
+	// rl_replace_line("", 0);
 	rl_redisplay();
 }
 
@@ -24,8 +26,8 @@ void	setup_signals()
 
 	sigemptyset(&sact.sa_mask);
 	sact.sa_flags = 0;
-	sact.sa_handler = ctrlc_handler;
-	sigaction(SIGINT, &sact, NULL);
+	sact.sa_handler = SIG_IGN;
+	signal(SIGINT, &ctrlc_handler);
 }
 
 int	main(int argc, char *argv[])
