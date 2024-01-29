@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:21 by jtollena          #+#    #+#             */
-/*   Updated: 2024/01/26 14:38:10 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/01/29 15:13:35 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,5 +20,9 @@
 # include <readline/readline.h>
 # include <readline/history.h>
 #include <fcntl.h>
+
+void	pwd();
+void	cd(char *arg);
+
 
 #endif

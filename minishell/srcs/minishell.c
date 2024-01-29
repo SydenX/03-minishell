@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/01/29 13:19:37 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/01/29 15:19:51 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,33 +34,42 @@ int	execute_cmd(char *line, char **envp)
 	pid_t pid;
 	char	*output;
 	
-	pipe(fd);
-	pid = fork();
-	if (pid == -1)
-		exit(1);
-	if (pid == 0)
-	{
-		dup2(fd[1], 0);
-		close(fd[0]);
-		if (ft_split(line, ' ')[0] != NULL)
+	if (ft_split(line, ' ')[0] != NULL){
+		if (ft_strncmp(ft_split(line, ' ')[0], "pwd", 3) == 0)
+			pwd();
+		else if (ft_strncmp(ft_split(line, ' ')[0], "cd", 2) == 0)
+			cd(ft_split(line, ' ')[1]);
+		else
 		{
-			if (ft_strnstr(ft_split(line, ' ')[0], "/bin/", ft_strlen(ft_split(line, ' ')[0])))
+			pipe(fd);
+			pid = fork();
+			if (pid == -1)
+				exit(1);
+			if (pid == 0)
 			{
-				if (execve(ft_split(line, ' ')[0], &ft_split(line, ' ')[0], envp) == -1)
-					fprintf(stderr, "Failed to execute '%s'\n", ft_split(line, ' ')[0]);
+				dup2(fd[1], 0);
+				close(fd[0]);
+				if (ft_split(line, ' ')[0] != NULL)
+				{
+					if (ft_strnstr(ft_split(line, ' ')[0], "/bin/", ft_strlen(ft_split(line, ' ')[0])))
+					{
+						if (execve(ft_split(line, ' ')[0], &ft_split(line, ' ')[0], envp) == -1)
+							fprintf(stderr, "Failed to execute '%s'\n", ft_split(line, ' ')[0]);
+					}
+					else
+						if (execve(ft_strjoin("/bin/", ft_split(line, ' ')[0]), &ft_split(line, ' ')[0], envp) == -1)
+								fprintf(stderr, "Failed to execute '%s'\n", ft_split(line, ' ')[0]);
+				}
+				close(fd[1]);
+				exit(1);
 			}
 			else
-				if (execve(ft_strjoin("/bin/", ft_split(line, ' ')[0]), &ft_split(line, ' ')[0], envp) == -1)
-						fprintf(stderr, "Failed to execute '%s'\n", ft_split(line, ' ')[0]);
+			{	
+				close(fd[0]);
+				close(fd[1]);
+				waitpid(pid, NULL, 0);
+			}
 		}
-		close(fd[1]);
-		exit(1);
-	}
-	else
-	{	
-		close(fd[0]);
-        close(fd[1]);
-		waitpid(pid, NULL, 0);
 	}
 	return (1);
 }

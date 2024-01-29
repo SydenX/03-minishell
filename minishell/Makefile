@@ -6,13 +6,15 @@
 #    By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/11/30 13:47:45 by jtollena          #+#    #+#              #
-#    Updated: 2024/01/29 13:15:56 by jtollena         ###   ########.fr        #
+#    Updated: 2024/01/29 15:14:23 by jtollena         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = minishell
 
-SRCS = srcs/minishell.c
+SRCS = srcs/minishell.c \
+		srcs/commands/pwd.c \
+		srcs/commands/cd.c
 
 OBJS = $(SRCS:.c=.o)
 INCLUDES = includes
