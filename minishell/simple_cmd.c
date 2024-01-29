@@ -1,24 +1,25 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   minishell.h                                        :+:      :+:    :+:   */
+/*   simple_cmd.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/01/23 12:58:21 by jtollena          #+#    #+#             */
-/*   Updated: 2024/01/26 14:38:10 by jtollena         ###   ########.fr       */
+/*   Created: 2024/01/22 13:04:25 by jtollena          #+#    #+#             */
+/*   Updated: 2024/01/26 13:56:46 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef MINISHELL_H
-# define MINISHELL_H
+#include <unistd.h>
 
-# include "libft.h"
-# include <stdio.h>
-# include <stdlib.h>
-# include <signal.h>
-# include <readline/readline.h>
-# include <readline/history.h>
-#include <fcntl.h>
+int	execute_simple_cmd(char *cmd, char **argv)
+{
+	execve(cmd, argv, NULL);
+	return 0;
+}
 
-#endif
+int	main(int argc, char **argv)
+{
+	execute_simple_cmd(argv[1], &argv[1]);
+	return 0;
+}
