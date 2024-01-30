@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/01/29 15:19:51 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/01/30 11:35:16 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,14 @@ int	execute_cmd(char *line, char **envp)
 			pwd();
 		else if (ft_strncmp(ft_split(line, ' ')[0], "cd", 2) == 0)
 			cd(ft_split(line, ' ')[1]);
+		else if (ft_strncmp(ft_split(line, ' ')[0], "env", 3) == 0)
+			env(envp);
+		else if (ft_strncmp(ft_split(line, ' ')[0], "exit", 4) == 0)
+		{
+			if (ft_split(line, ' ')[1] != NULL)
+				exit_builtin(ft_atoi(ft_split(line, ' ')[1]));
+			exit_builtin(1);
+		}
 		else
 		{
 			pipe(fd);
@@ -58,7 +66,7 @@ int	execute_cmd(char *line, char **envp)
 					}
 					else
 						if (execve(ft_strjoin("/bin/", ft_split(line, ' ')[0]), &ft_split(line, ' ')[0], envp) == -1)
-								fprintf(stderr, "Failed to execute '%s'\n", ft_split(line, ' ')[0]);
+							fprintf(stderr, "Failed to execute '%s'\n", ft_split(line, ' ')[0]);
 				}
 				close(fd[1]);
 				exit(1);
