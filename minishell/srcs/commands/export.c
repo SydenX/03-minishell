@@ -6,13 +6,12 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/30 11:38:56 by jtollena          #+#    #+#             */
-/*   Updated: 2024/01/30 11:39:07 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/01/30 12:11:19 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	export()
+void	export(char *varname, char *data)
 {
-	
 }
