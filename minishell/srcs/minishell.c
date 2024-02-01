@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/01 11:55:42 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/01 15:08:17 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,32 +28,50 @@ void	setup_signals()
 	signal(SIGINT, &ctrlc_handler);
 }
 
-void	try_execution(char **envpath, char *line, char **envp)
+char	**get_envpath()
+{
+	char	*env = getenv("PATH");
+	char	**path = ft_split(env, ':');
+	return (path);
+}
+
+void	try_execution(char *line, char **envp)
 {
 	int	passed;
 	int	i;
 	char	*join;
+	char	*firstjoin;
+	char	**path;
 
-	passed = 0;
 	i = 0;
-	if (execve(ft_split(line, ' ')[0], &ft_split(line, ' ')[0], envp) != -1)
-		passed = 1;
-	while (envpath[i] != NULL && passed == 0) 
+	exit_code = execve(ft_split(line, ' ')[0], &ft_split(line, ' ')[0], envp);
+	path = get_envpath();
+	if (path == NULL)
+		return ;
+	while (path[i] != NULL && exit_code == -1) 
 	{
-		join = ft_strjoin(envpath[i], ft_split(line, ' ')[0]);
+		firstjoin = ft_strjoin(path[i], "/");
+		if (firstjoin == NULL)
+			return ;
+		join = ft_strjoin(firstjoin, ft_split(line, ' ')[0]);
+		free(firstjoin);
 		if (join == NULL)
 			return ;
-		if (execve(join, &ft_split(line, ' ')[0], envp) != -1)
+		exit_code = execve(join, &ft_split(line, ' ')[0], envp);
+		if (exit_code != -1)
 		{
-			passed = 1;
+			printf("*%d\n", exit_code);
 			free(join);
 			break ;
 		}
 		free(join);
 		i++;
 	}
-	if (passed == 0)
-		fprintf(stderr, "Failed to execute '%s'\n", ft_split(line, ' ')[0]);
+	if (exit_code == -1)
+	{
+		exit_code = 1;
+		printf("minishell: %s: command not found\n", ft_split(line, ' ')[0]);
+	}
 }
 
 int	execute_cmd(char *line, char **envp)
@@ -61,7 +79,7 @@ int	execute_cmd(char *line, char **envp)
 	int fd[2];
 	pid_t pid;
 	char	*output;
-	
+
 	if (ft_split(line, ' ')[0] != NULL){
 		if (ft_strncmp(ft_split(line, ' ')[0], "pwd", 3) == 0)
 			pwd();
@@ -70,30 +88,31 @@ int	execute_cmd(char *line, char **envp)
 		else if (ft_strncmp(ft_split(line, ' ')[0], "env", 3) == 0)
 			env(envp);
 		else if (ft_strncmp(ft_split(line, ' ')[0], "exit", 4) == 0)
-		{
-			if (ft_split(line, ' ')[1] != NULL)
-				exit_builtin(ft_atoi(ft_split(line, ' ')[1]));
-			exit_builtin(1);
-		}
+			exit_builtin(line);
+		else if (ft_strncmp(ft_split(line, ' ')[0], "echo", 4) == 0)
+			echo(&line[ft_strlen(ft_split(line, ' ')[0]) + 1], 0);
 		else
-		{
-			pipe(fd);
+		{	
+			// pipe(fd);
 			pid = fork();
 			if (pid == -1)
 				exit(1);
 			if (pid == 0)
 			{
-				dup2(fd[1], 0);
-				close(fd[0]);
+				// dup2(fd[1], 0);
+				// close(fd[0]);
+				close(1);
+				int fdd = open("testoutput", O_RDWR | O_CREAT);
 				if (ft_split(line, ' ')[0] != NULL)
-					try_execution(get_envpath(), line, envp);
-				close(fd[1]);
+					try_execution(line, envp);
+				// close(fd[1]);
+				close(fdd);
 				exit(1);
 			}
 			else
-			{	
-				close(fd[0]);
-				close(fd[1]);
+			{
+				// close(fd[0]);
+				// close(fd[1]);
 				waitpid(pid, NULL, 0);
 			}
 		}
@@ -111,9 +130,6 @@ int	main(int argc, char *argv[], char **envp)
 			break ;
 		add_history(line);
 		execute_cmd(line, envp);
-
-		if (!ft_strncmp(line, "exit", 5))
-			return (printf("exit\n"), 1);
 	}
 	return (0);
 }

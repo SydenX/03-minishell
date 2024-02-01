@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:21 by jtollena          #+#    #+#             */
-/*   Updated: 2024/01/30 12:12:52 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/01 14:20:59 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,13 +19,23 @@
 # include <signal.h>
 # include <readline/readline.h>
 # include <readline/history.h>
-#include <fcntl.h>
+# include <fcntl.h>
+
+int exit_code;
+
+typedef struct	cmd {
+	int		input;
+	int		output;
+	char	*cmd;
+	char	**flags;
+	char	**args;
+}	t_cmd;
 
 //Built-in cmds
 void	pwd();
 void	cd(char *arg);
 void	env(char **envp);
-void	exit_builtin(int exitcode);
+void	exit_builtin(char *line);
 void	echo(char *out, int has_param);
 
 #endif
