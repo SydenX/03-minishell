@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/01/30 11:35:16 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/01 11:55:42 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,34 @@ void	setup_signals()
 
 	signal(SIGQUIT, SIG_IGN);
 	signal(SIGINT, &ctrlc_handler);
+}
+
+void	try_execution(char **envpath, char *line, char **envp)
+{
+	int	passed;
+	int	i;
+	char	*join;
+
+	passed = 0;
+	i = 0;
+	if (execve(ft_split(line, ' ')[0], &ft_split(line, ' ')[0], envp) != -1)
+		passed = 1;
+	while (envpath[i] != NULL && passed == 0) 
+	{
+		join = ft_strjoin(envpath[i], ft_split(line, ' ')[0]);
+		if (join == NULL)
+			return ;
+		if (execve(join, &ft_split(line, ' ')[0], envp) != -1)
+		{
+			passed = 1;
+			free(join);
+			break ;
+		}
+		free(join);
+		i++;
+	}
+	if (passed == 0)
+		fprintf(stderr, "Failed to execute '%s'\n", ft_split(line, ' ')[0]);
 }
 
 int	execute_cmd(char *line, char **envp)
@@ -58,16 +86,7 @@ int	execute_cmd(char *line, char **envp)
 				dup2(fd[1], 0);
 				close(fd[0]);
 				if (ft_split(line, ' ')[0] != NULL)
-				{
-					if (ft_strnstr(ft_split(line, ' ')[0], "/bin/", ft_strlen(ft_split(line, ' ')[0])))
-					{
-						if (execve(ft_split(line, ' ')[0], &ft_split(line, ' ')[0], envp) == -1)
-							fprintf(stderr, "Failed to execute '%s'\n", ft_split(line, ' ')[0]);
-					}
-					else
-						if (execve(ft_strjoin("/bin/", ft_split(line, ' ')[0]), &ft_split(line, ' ')[0], envp) == -1)
-							fprintf(stderr, "Failed to execute '%s'\n", ft_split(line, ' ')[0]);
-				}
+					try_execution(get_envpath(), line, envp);
 				close(fd[1]);
 				exit(1);
 			}
