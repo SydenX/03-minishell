@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:21 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/01 14:20:59 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/02 12:40:55 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,8 @@
 int exit_code;
 
 typedef struct	cmd {
-	int		input;
-	int		output;
+	char	*input;
+	char	*output;
 	char	*cmd;
 	char	**flags;
 	char	**args;

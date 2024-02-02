@@ -1,30 +1,39 @@
-minishell: 1: command not found
-nishell
+Makefile
+a.out
+includes
+libft
+minishell
 simple_cmd.c
 srcs
+testinput
 testoutput
-********* #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2023/11/30 13:47:45 by jtollena          #+#    #+#              #
-#    Updated: 2024/01/30 12:13:01 by jtollena         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
+/
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   pwd.c                                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/01/29 13:59:12 by jtollena          #+#    #+#             */
+/*   Updated: 2024/02/01 13:48:22 by jtollena         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-NAME = minishell
+#include "minishell.h"
 
-SRCS = srcs/minishell.c \
-		srcs/commands/pwd.c \
-		srcs/commands/cd.c \
-		srcs/commands/env.c \
-		srcs/commands/exit.c \
-		srcs/commands/echo.c
+void	pwd()
+{
+	char	cwd[1025];
 
-OBJS = $(SRCS:.c=.o)
+	if (getcwd(cwd, sizeof(cwd)) != NULL)
+	{
+		exit_code = 0;
+		printf("%s\n", cwd);
+	}
+	else
+		exit_code = 1;
+}
+BJS = $(SRCS:.c=.o)
 INCLUDES = includes
 FLAGS = #-Wall -Wextra -Werror
 
@@ -46,4 +55,12 @@ fclean: clean
 
 re: fclean $(NAME)
 
-.PHONY: re fclean clean all
+.PHONY: re fclean clean allMakefile
+a.out
+includes
+libft
+minishell
+simple_cmd.c
+srcs
+testinput
+testoutput

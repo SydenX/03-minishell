@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/01 15:08:17 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/02 13:49:34 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,37 @@ char	**get_envpath()
 	return (path);
 }
 
+int		execute(t_cmd cmd, char **env)
+{
+	int fd[2];
+	int customoutput;
+	pid_t pid;
+	int	code;
+
+	pipe(fd);
+	pid = fork();
+	if (pid == -1)
+		exit(1);
+	customoutput = open(cmd.output, O_WRONLY | O_CREAT);
+	if (pid == 0)
+	{
+		close(2);
+		close(fd[0]);
+		dup2(customoutput, STDOUT_FILENO);
+		// dup2(fd[1], STDERR_FILENO);
+		execve(cmd.cmd, cmd.args, env);
+		exit(127);
+	}
+	else
+	{
+		close(fd[1]);
+		close(customoutput);
+		waitpid(pid, &code, 0);
+		return (((code >> 8) & 0x000000ff));
+	}
+	return (127);
+}
+
 void	try_execution(char *line, char **envp)
 {
 	int	passed;
@@ -42,36 +73,66 @@ void	try_execution(char *line, char **envp)
 	char	*join;
 	char	*firstjoin;
 	char	**path;
+	t_cmd	cmd;
 
 	i = 0;
-	exit_code = execve(ft_split(line, ' ')[0], &ft_split(line, ' ')[0], envp);
+	cmd.cmd = ft_split(line, ' ')[0];
+	if (cmd.cmd == NULL)
+		return ;
+	// cmd.input = ft_strdup("testinput");
+	cmd.output = ft_strdup("testoutput");
+	cmd.args = &ft_split(line, ' ')[0];
+	if (cmd.args == NULL)
+	{
+		free(cmd.cmd);
+		return ;
+	}
+	exit_code = execute(cmd, envp);
 	path = get_envpath();
 	if (path == NULL)
+	{
+		free(cmd.cmd);
+		free(cmd.args);
 		return ;
-	while (path[i] != NULL && exit_code == -1) 
+	}
+	char *cmdcpy = ft_strdup(cmd.cmd);
+	if (cmdcpy == NULL)
+	{
+		free(cmd.cmd);
+		free(cmd.args);
+		return ;
+	}
+	while (path[i] != NULL && exit_code == 127) 
 	{
 		firstjoin = ft_strjoin(path[i], "/");
 		if (firstjoin == NULL)
-			return ;
-		join = ft_strjoin(firstjoin, ft_split(line, ' ')[0]);
-		free(firstjoin);
-		if (join == NULL)
-			return ;
-		exit_code = execve(join, &ft_split(line, ' ')[0], envp);
-		if (exit_code != -1)
 		{
-			printf("*%d\n", exit_code);
-			free(join);
+			free(cmd.cmd);
+			free(cmd.args);
+			return ;
+		}
+		free(cmd.cmd);
+		cmd.cmd = ft_strjoin(firstjoin, cmdcpy);
+		free(firstjoin);
+		if (cmd.cmd == NULL)
+		{
+			free(cmd.args);
+			return ;
+		}
+		exit_code = execute(cmd, envp);
+		if (exit_code != 127)
+		{
+			free(cmd.cmd);
 			break ;
 		}
-		free(join);
 		i++;
 	}
-	if (exit_code == -1)
+	if (exit_code == 127)
 	{
-		exit_code = 1;
+		exit_code = 127;
 		printf("minishell: %s: command not found\n", ft_split(line, ' ')[0]);
 	}
+	free(cmd.args);
 }
 
 int	execute_cmd(char *line, char **envp)
@@ -91,31 +152,8 @@ int	execute_cmd(char *line, char **envp)
 			exit_builtin(line);
 		else if (ft_strncmp(ft_split(line, ' ')[0], "echo", 4) == 0)
 			echo(&line[ft_strlen(ft_split(line, ' ')[0]) + 1], 0);
-		else
-		{	
-			// pipe(fd);
-			pid = fork();
-			if (pid == -1)
-				exit(1);
-			if (pid == 0)
-			{
-				// dup2(fd[1], 0);
-				// close(fd[0]);
-				close(1);
-				int fdd = open("testoutput", O_RDWR | O_CREAT);
-				if (ft_split(line, ' ')[0] != NULL)
-					try_execution(line, envp);
-				// close(fd[1]);
-				close(fdd);
-				exit(1);
-			}
-			else
-			{
-				// close(fd[0]);
-				// close(fd[1]);
-				waitpid(pid, NULL, 0);
-			}
-		}
+		else if (ft_split(line, ' ')[0] != NULL)
+			try_execution(line, envp);
 	}
 	return (1);
 }
