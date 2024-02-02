@@ -7,60 +7,14 @@ simple_cmd.c
 srcs
 testinput
 testoutput
-/
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   pwd.c                                              :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/01/29 13:59:12 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/01 13:48:22 by jtollena         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include "minishell.h"
-
-void	pwd()
-{
-	char	cwd[1025];
-
-	if (getcwd(cwd, sizeof(cwd)) != NULL)
-	{
-		exit_code = 0;
-		printf("%s\n", cwd);
-	}
-	else
-		exit_code = 1;
-}
-BJS = $(SRCS:.c=.o)
-INCLUDES = includes
-FLAGS = #-Wall -Wextra -Werror
-
-%.o: %.c
-	gcc $(FLAGS) -g -Ilibft -I/Users/jtollena/.brew/opt/readline/include -I$(INCLUDES) -c $< -o $@
-
-all: $(NAME)
-
-clean:
-	rm $(OBJS)
-	
-$(NAME): $(OBJS) $(INCLUDES)
-	make -C libft/
-	gcc $(FLAGS) -g -Llibft -lft -L/Users/jtollena/.brew/opt/readline/lib -lreadline $(OBJS) -o $(NAME)
-	make clean
-
-fclean: clean
-	rm $(NAME)
-
-re: fclean $(NAME)
-
-.PHONY: re fclean clean allMakefile
-a.out
-includes
-libft
-minishell
-simple_cmd.c
-srcs
-testinput
-testoutput
+9 jtollena  2023_s19    306 Jan 26 13:49 ..
+-rw-r--r--@  1 jtollena  2023_s19   6148 Feb  1 14:30 .DS_Store
+-rw-r--r--   1 jtollena  2023_s19   1503 Jan 30 12:13 Makefile
+-rwxr-xr-x   1 jtollena  2023_s19  49480 Jan 26 13:56 a.out
+drwxr-xr-x   3 jtollena  2023_s19    102 Jan 30 11:24 includes
+drwxr-xr-x  87 jtollena  2023_s19   2958 Jan 23 13:17 libft
+-rwxr-xr-x   1 jtollena  2023_s19  53544 Feb  2 14:52 minishell
+-rw-r--r--   1 jtollena  2023_s19   1089 Jan 26 13:56 simple_cmd.c
+drwxr-xr-x   4 jtollena  2023_s19    136 Feb  2 14:52 srcs
+-rwxrwxrwx   1 jtollena  2023_s19      3 Feb  2 13:02 testinput
+-rw-------@  1 jtollena  2023_s19    752 Feb  2 14:52 testoutput

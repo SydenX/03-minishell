@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/02 13:49:34 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/02 15:09:24 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,25 +41,30 @@ int		execute(t_cmd cmd, char **env)
 	int customoutput;
 	pid_t pid;
 	int	code;
-
+	char	buf;
+	
 	pipe(fd);
 	pid = fork();
 	if (pid == -1)
 		exit(1);
-	customoutput = open(cmd.output, O_WRONLY | O_CREAT);
+	if (cmd.output != NULL)
+		customoutput = open(cmd.output, O_WRONLY | O_CREAT);
+	buf = '\n';
 	if (pid == 0)
 	{
-		close(2);
+		close(fd[1]);
+		while (read(fd[0], &buf, 1) > 0)
+			write(STDOUT_FILENO, &buf, 1);
 		close(fd[0]);
-		dup2(customoutput, STDOUT_FILENO);
-		// dup2(fd[1], STDERR_FILENO);
 		execve(cmd.cmd, cmd.args, env);
 		exit(127);
 	}
 	else
 	{
+		close(fd[0]);
 		close(fd[1]);
-		close(customoutput);
+		if (cmd.output != NULL)
+			close(customoutput);
 		waitpid(pid, &code, 0);
 		return (((code >> 8) & 0x000000ff));
 	}
@@ -80,7 +85,9 @@ void	try_execution(char *line, char **envp)
 	if (cmd.cmd == NULL)
 		return ;
 	// cmd.input = ft_strdup("testinput");
-	cmd.output = ft_strdup("testoutput");
+	// cmd.output = ft_strdup("testoutput");
+	cmd.input = NULL;
+	cmd.output = NULL;
 	cmd.args = &ft_split(line, ' ')[0];
 	if (cmd.args == NULL)
 	{
