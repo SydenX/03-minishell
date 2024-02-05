@@ -6,7 +6,7 @@
 #    By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/11/30 13:47:45 by jtollena          #+#    #+#              #
-#    Updated: 2024/01/30 12:13:01 by jtollena         ###   ########.fr        #
+#    Updated: 2024/02/05 10:25:08 by jtollena         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,8 @@ SRCS = srcs/minishell.c \
 		srcs/commands/cd.c \
 		srcs/commands/env.c \
 		srcs/commands/exit.c \
-		srcs/commands/echo.c
+		srcs/commands/echo.c \
+		srcs/utils.c
 
 OBJS = $(SRCS:.c=.o)
 INCLUDES = includes

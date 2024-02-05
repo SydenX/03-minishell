@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:21 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/02 12:40:55 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/05 10:37:58 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ void	pwd();
 void	cd(char *arg);
 void	env(char **envp);
 void	exit_builtin(char *line);
-void	echo(char *out, int has_param);
+void	echo(char **out, int has_param, char **env);
+int		replace(char **str, char to_replace, char replace_by);
 
 #endif

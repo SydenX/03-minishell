@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/02 15:09:24 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/05 09:55:34 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -158,7 +158,7 @@ int	execute_cmd(char *line, char **envp)
 		else if (ft_strncmp(ft_split(line, ' ')[0], "exit", 4) == 0)
 			exit_builtin(line);
 		else if (ft_strncmp(ft_split(line, ' ')[0], "echo", 4) == 0)
-			echo(&line[ft_strlen(ft_split(line, ' ')[0]) + 1], 0);
+			echo(&ft_split(line, ' ')[1], 0, envp);
 		else if (ft_split(line, ' ')[0] != NULL)
 			try_execution(line, envp);
 	}

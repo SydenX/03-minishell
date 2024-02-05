@@ -1,27 +1,35 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pwd.c                                              :+:      :+:    :+:   */
+/*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/01/29 13:59:12 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/05 10:51:01 by jtollena         ###   ########.fr       */
+/*   Created: 2024/02/05 10:19:14 by jtollena          #+#    #+#             */
+/*   Updated: 2024/02/05 10:40:28 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	pwd()
+int	replace(char **str, char to_replace, char replace_by)
 {
-	char	*cwd;
+	int	i;
+	int	ln;
 
-	cwd = NULL;
-	if ((cwd = getcwd(cwd, 0)) != NULL)
+	ln = 0;
+	i = 0;
+	while (str[0][i] != 0)
 	{
-		exit_code = 0;
-		printf("%s\n", cwd);
+		if (str[0][i] == to_replace)
+		{
+			if (replace_by == 0)
+				ln++;
+			str[0][i] = replace_by;
+		}
+		i++;
 	}
-	else
-		exit_code = 1;
+	if (ln > 0)
+		return (ln);
+	return (ft_strlen(*str));
 }
