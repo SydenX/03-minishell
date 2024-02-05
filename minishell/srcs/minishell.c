@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/05 12:31:05 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/05 13:54:25 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,54 @@ char	**get_envpath()
 	return (path);
 }
 
+int	execute_pipes(t_cmd *cmds, char **env)
+{
+	int	fd[6];
+	int	i = 0;
+	while (i < 3)
+	{
+		pipe(fd + i*2);
+		i++;
+	}
+	i = 0;
+	int j = 0;
+	while (i < 3)
+	{
+		pid_t pid = fork();
+		if (pid == 0)
+		{
+			if (i != 0)
+				dup2(fd[j - 2], STDIN_FILENO);
+			if (i != 2)
+				dup2(fd[j + 1], STDOUT_FILENO);
+			close(fd[0]);
+			close(fd[1]);
+			close(fd[2]);
+			close(fd[3]);
+			close(fd[4]);
+			close(fd[5]);
+			execve(cmds[i].cmd, cmds[i].args, env);
+			exit(127);
+		}
+		j+=2;
+		i++;
+	}
+	i = 0;
+	while (i < 6)
+	{
+		close(fd[i]);
+		i++;
+	}
+	i = 0;
+	int code;
+	while (i < 3)
+	{
+		wait(&code);
+		i++;
+	}
+	return (127);
+}
+
 int	execute_pipe(t_cmd first, t_cmd second, char **env)
 {
 	int		fd[2];
@@ -49,14 +97,6 @@ int	execute_pipe(t_cmd first, t_cmd second, char **env)
 		exit(1);
 	if (pid1 == 0)
 	{
-		close(fd[1]);
-		dup2(fd[1], STDOUT_FILENO);
-		printf("%s, %s\n", first.cmd, first.args[0]);
-		execve(first.cmd, first.args, env);
-		exit(127);
-	}
-	else
-	{
 		pid2 = fork();
 		if (pid2 == -1)
 			exit(1);
@@ -64,22 +104,29 @@ int	execute_pipe(t_cmd first, t_cmd second, char **env)
 			customoutput = open(second.output, O_WRONLY | O_CREAT | O_TRUNC);
 		if (pid2 == 0)
 		{
+			dup2(fd[1], STDOUT_FILENO);
+			execve(first.cmd, first.args, env);
+			close(fd[0]);
+			exit(127);
+		} else {
+			waitpid(pid2, &code, 0);
+
 			dup2(fd[0], STDIN_FILENO);
 			close(fd[1]);
 			dup2(fd[1], STDOUT_FILENO);
 			execve(second.cmd, second.args, env);
 			exit(127);
 		}
-		else
-		{
-			close(fd[0]);
-			close(fd[1]);
-			if (second.output != NULL)
-				close(customoutput);
-			waitpid(pid1, &code, 0);
-			waitpid(pid2, &code, 0);
-			return (((code >> 8) & 0x000000ff));
-		}
+	}
+	else
+	{
+		close(fd[0]);
+		close(fd[1]);
+		if (second.output != NULL)
+			close(customoutput);
+		waitpid(pid1, &code, 0);
+		waitpid(pid2, &code, 0);
+		return (((code >> 8) & 0x000000ff));
 	}
 	return (127);
 }
@@ -223,7 +270,9 @@ int	main(int argc, char *argv[], char **envp)
 {
 	t_cmd cmd1;
 	t_cmd cmd2;
-
+	t_cmd cmd3;
+	t_cmd *cmds;
+	
 	setup_signals();
 	while (1)
 	{
@@ -233,12 +282,18 @@ int	main(int argc, char *argv[], char **envp)
 		add_history(line);
 		// execute_cmd(line, envp);
 
-		cmd1.cmd = ft_strdup("/bin/cat");
+		cmd1.cmd = ft_strdup("/usr/bin/env");
 		cmd2.cmd = ft_strdup("/usr/bin/wc");
+		cmd3.cmd = ft_strdup("/usr/bin/grep");
 		cmd2.output = NULL;
 		cmd1.args = &line;
 		cmd2.args = &line;
-		execute_pipe(cmd1, cmd2, envp);
+		cmd3.args = &line;
+		cmds = malloc(sizeof(t_cmd) * 3);
+		cmds[0] = cmd1;
+		cmds[1] = cmd2;
+		cmds[2] = cmd3;
+		execute_pipes(cmds, envp);
 	}
 	return (0);
 }
