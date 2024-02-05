@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/05 14:58:05 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/05 15:52:00 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,81 +38,56 @@ char	**get_envpath()
 int	execute_pipes(t_cmd **cmd, char **env)
 {
 	int fd[2];
+	int	i;
 	pid_t pid;
-	int fdd = 0;				/* Backup */
+	int fdd = 0;
 	int	code;
+	int customoutput;
+	int custominput;
 
-	while (*cmd != NULL) {
+	i = 0;
+	while (cmd[i] != NULL) {
+		customoutput = -1;
+		custominput = -1;
+
 		pipe(fd);
+		if (cmd[i]->input != NULL)
+			custominput = open(cmd[i]->input, O_RDONLY | O_CREAT);
+		if (i > 0 && custominput == -1)
+			if (cmd[i - 1]->output != NULL)
+				custominput = open(cmd[i - 1]->output, O_RDONLY | O_CREAT);
+		if (cmd[i]->output != NULL)
+			customoutput = open(cmd[i]->output, O_WRONLY | O_CREAT | O_TRUNC);
 		if ((pid = fork()) == -1) {
 			perror("fork");
 			exit(1);
 		}
 		else if (pid == 0) {
-			dup2(fdd, 0);
-			if (*(cmd + 1) != NULL) {
-				dup2(fd[1], 1);
+			if (custominput != -1)
+				dup2(custominput, STDIN_FILENO);
+			else
+				dup2(fdd, STDIN_FILENO);
+			if (cmd[i + 1] != NULL) {
+				dup2(fd[1], STDOUT_FILENO);
 			}
+			if (customoutput != -1)
+				dup2(customoutput, STDOUT_FILENO);
 			close(fd[0]);
-			execve((*cmd)->cmd, (*cmd)->args, env);
+			execve(cmd[i]->cmd, cmd[i]->args, env);
 			exit(127);
 		}
 		else {
 			waitpid(pid, &code, 0);
 			close(fd[1]);
+			if (customoutput != -1)
+				close(customoutput);
+			if (custominput != -1)
+				close(custominput);
 			fdd = fd[0];
-			cmd++;
+			i++;
 		}
 	}
 	return (((code >> 8) & 0x000000ff));
-}
-
-int	execute_pipe(t_cmd first, t_cmd second, char **env)
-{
-	int		fd[2];
-	pid_t	pid1;
-	pid_t	pid2;
-	int	code;
-	int customoutput;
-
-	pipe(fd);
-	pid1 = fork();
-	if (pid1 == -1)
-		exit(1);
-	if (pid1 == 0)
-	{
-		pid2 = fork();
-		if (pid2 == -1)
-			exit(1);
-		if (second.output != NULL)
-			customoutput = open(second.output, O_WRONLY | O_CREAT | O_TRUNC);
-		if (pid2 == 0)
-		{
-			dup2(fd[1], STDOUT_FILENO);
-			execve(first.cmd, first.args, env);
-			close(fd[0]);
-			exit(127);
-		} else {
-			waitpid(pid2, &code, 0);
-
-			dup2(fd[0], STDIN_FILENO);
-			close(fd[1]);
-			dup2(fd[1], STDOUT_FILENO);
-			execve(second.cmd, second.args, env);
-			exit(127);
-		}
-	}
-	else
-	{
-		close(fd[0]);
-		close(fd[1]);
-		if (second.output != NULL)
-			close(customoutput);
-		waitpid(pid1, &code, 0);
-		waitpid(pid2, &code, 0);
-		return (((code >> 8) & 0x000000ff));
-	}
-	return (127);
 }
 
 int		execute(t_cmd cmd, char **env)
@@ -130,9 +105,6 @@ int		execute(t_cmd cmd, char **env)
 	customoutput = 1;
 	if (cmd.output != NULL)
 		customoutput = open(cmd.output, O_WRONLY | O_CREAT | O_TRUNC);
-	buf = '\n';
-	while (read(customoutput, &buf, 1) > 0)
-		write(customoutput, 0, 1);
 	if (pid == 0)
 	{
 		close(fd[1]);
@@ -270,20 +242,23 @@ int	main(int argc, char *argv[], char **envp)
 		cmd2 = malloc(sizeof(t_cmd));
 		cmd3 = malloc(sizeof(t_cmd));
 
-		cmd1->cmd = "/usr/bin/env";
-		cmd1->args = (char *[]){"/usr/bin/env", NULL};
+		cmd1->cmd = "/bin/cat";
+		cmd1->args = (char *[]){"/bin/cat", "Makefile", NULL};
 		cmd1->output = NULL;
+		cmd1->input = NULL;
 
 		cmd2->cmd = "/usr/bin/wc";
-		cmd2->args = (char *[]){"/usr/bin/wc", "d", NULL};
-		cmd2->output = NULL;
+		cmd2->args = (char *[]){"/usr/bin/wc", "-l", NULL};
+		cmd2->output = "testinput";
+		cmd2->input = NULL;
 
-		cmd3->cmd = "/usr/bin/grep";
-		cmd3->args = (char *[]){"/usr/bin/grep", "PATH", NULL};
-		cmd3->output = NULL;
+		cmd3->cmd = "/usr/bin/wc";
+		cmd3->args = (char *[]){"/usr/bin/wc", NULL};
+		cmd3->output = "testoutput";
+		cmd3->input = "testinput";
 
-		t_cmd *commands[] = {cmd1, cmd3, cmd2, NULL};
-		printf("%d\n", execute_pipes(commands, envp));
+		t_cmd *commands[] = {cmd1, cmd2, cmd3, NULL};
+		execute_pipes(commands, envp);
 		// execute_pipes(commands, 3, envp);
 	}
 	return (0);

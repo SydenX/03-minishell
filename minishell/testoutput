@@ -1,9 +1,1 @@
-Makefile
-a.out
-includes
-libft
-minishell
-simple_cmd.c
-srcs
-testinput
-testoutput
+       1       1       9
