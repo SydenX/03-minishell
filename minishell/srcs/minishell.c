@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/05 13:54:25 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/05 14:58:05 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,52 +35,36 @@ char	**get_envpath()
 	return (path);
 }
 
-int	execute_pipes(t_cmd *cmds, char **env)
+int	execute_pipes(t_cmd **cmd, char **env)
 {
-	int	fd[6];
-	int	i = 0;
-	while (i < 3)
-	{
-		pipe(fd + i*2);
-		i++;
-	}
-	i = 0;
-	int j = 0;
-	while (i < 3)
-	{
-		pid_t pid = fork();
-		if (pid == 0)
-		{
-			if (i != 0)
-				dup2(fd[j - 2], STDIN_FILENO);
-			if (i != 2)
-				dup2(fd[j + 1], STDOUT_FILENO);
+	int fd[2];
+	pid_t pid;
+	int fdd = 0;				/* Backup */
+	int	code;
+
+	while (*cmd != NULL) {
+		pipe(fd);
+		if ((pid = fork()) == -1) {
+			perror("fork");
+			exit(1);
+		}
+		else if (pid == 0) {
+			dup2(fdd, 0);
+			if (*(cmd + 1) != NULL) {
+				dup2(fd[1], 1);
+			}
 			close(fd[0]);
-			close(fd[1]);
-			close(fd[2]);
-			close(fd[3]);
-			close(fd[4]);
-			close(fd[5]);
-			execve(cmds[i].cmd, cmds[i].args, env);
+			execve((*cmd)->cmd, (*cmd)->args, env);
 			exit(127);
 		}
-		j+=2;
-		i++;
+		else {
+			waitpid(pid, &code, 0);
+			close(fd[1]);
+			fdd = fd[0];
+			cmd++;
+		}
 	}
-	i = 0;
-	while (i < 6)
-	{
-		close(fd[i]);
-		i++;
-	}
-	i = 0;
-	int code;
-	while (i < 3)
-	{
-		wait(&code);
-		i++;
-	}
-	return (127);
+	return (((code >> 8) & 0x000000ff));
 }
 
 int	execute_pipe(t_cmd first, t_cmd second, char **env)
@@ -271,7 +255,6 @@ int	main(int argc, char *argv[], char **envp)
 	t_cmd cmd1;
 	t_cmd cmd2;
 	t_cmd cmd3;
-	t_cmd *cmds;
 	
 	setup_signals();
 	while (1)
@@ -282,18 +265,26 @@ int	main(int argc, char *argv[], char **envp)
 		add_history(line);
 		// execute_cmd(line, envp);
 
-		cmd1.cmd = ft_strdup("/usr/bin/env");
-		cmd2.cmd = ft_strdup("/usr/bin/wc");
-		cmd3.cmd = ft_strdup("/usr/bin/grep");
-		cmd2.output = NULL;
-		cmd1.args = &line;
-		cmd2.args = &line;
-		cmd3.args = &line;
-		cmds = malloc(sizeof(t_cmd) * 3);
-		cmds[0] = cmd1;
-		cmds[1] = cmd2;
-		cmds[2] = cmd3;
-		execute_pipes(cmds, envp);
+		t_cmd *cmd1, *cmd2, *cmd3;
+		cmd1 = malloc(sizeof(t_cmd));
+		cmd2 = malloc(sizeof(t_cmd));
+		cmd3 = malloc(sizeof(t_cmd));
+
+		cmd1->cmd = "/usr/bin/env";
+		cmd1->args = (char *[]){"/usr/bin/env", NULL};
+		cmd1->output = NULL;
+
+		cmd2->cmd = "/usr/bin/wc";
+		cmd2->args = (char *[]){"/usr/bin/wc", "d", NULL};
+		cmd2->output = NULL;
+
+		cmd3->cmd = "/usr/bin/grep";
+		cmd3->args = (char *[]){"/usr/bin/grep", "PATH", NULL};
+		cmd3->output = NULL;
+
+		t_cmd *commands[] = {cmd1, cmd3, cmd2, NULL};
+		printf("%d\n", execute_pipes(commands, envp));
+		// execute_pipes(commands, 3, envp);
 	}
 	return (0);
 }
