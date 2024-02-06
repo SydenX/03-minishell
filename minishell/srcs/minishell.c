@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/06 14:31:54 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/06 14:36:58 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,22 +35,22 @@ char	**get_envpath()
 	return (path);
 }
 
-void	execute_cmd_setup(char **firstcmdcpy, t_cmd *cmd, char **path, char **cmdcpy)
+void	execute_cmd_setup(char **firstcmdcpy, t_cmd *cmd, char ***path, char **cmdcpy)
 {
 	exit_code = 127;
 	*firstcmdcpy = ft_strdup(cmd->cmd);
 	if (*firstcmdcpy == NULL)
 		exit(0);
-	path = get_envpath();
+	*path = get_envpath();
 	if (path == NULL)
 	{
-		free(*firstcmdcpy);
+		free(firstcmdcpy);
 		exit(0);
 	}
 	*cmdcpy = ft_strdup(cmd->cmd);
 	if (*cmdcpy == NULL)
 	{
-		free(*firstcmdcpy);
+		free(firstcmdcpy);
 		free(path);
 		exit(0);
 	}
@@ -76,7 +76,7 @@ int	execute_cmd(t_cmd *cmd, char **envp)
 	{
 		execve(cmd->cmd, cmd->args, envp);
 		i = 0;
-		execute_cmd_setup(&firstcmdcpy, cmd, path, &cmdcpy);
+		execute_cmd_setup(&firstcmdcpy, cmd, &path, &cmdcpy);
 		while (path[i] != NULL && exit_code == 127) 
 		{
 			firstjoin = ft_strjoin(path[i], "/");
@@ -207,41 +207,41 @@ int	main(int argc, char *argv[], char **envp)
 		cmd2->output = NULL;
 		cmd2->input = NULL;
 
-		cmd3->cmd = ft_strdup("cat");
+		cmd3->cmd = ft_strdup("./minishell");
 		cmd3->args = (char *[]){cmd3->cmd, NULL};
 		cmd3->flags = NULL;
 		cmd3->output = NULL;
 		cmd3->input = NULL;
 
 		// HERE DOC TESTS
-		char *newline;
-		newline = ft_strdup("");
-		int fd = open("tmp", O_WRONLY | O_CREAT | O_APPEND, 0666);
-		cmd3->input = "tmp";
-		pid_t f = fork();
-		if (f == 0)
-		{
-			while (1)
-			{
-				if (ft_strncmp(newline, "eof", 3) != 0)
-				{
-					newline = readline("> ");
-					if (newline == NULL)
-						break ;
-					else if (ft_strncmp(newline, "eof", 3) != 0)
-					{
-						write(fd, newline, ft_strlen(newline));
-						write(fd, "\n", 1);
-					}
-				}
-				else
-					break ;
-			}
-			exit(1);
-		}
-		else
-			waitpid(f, NULL, 0);
-		close(fd);
+		// char *newline;
+		// newline = ft_strdup("");
+		// int fd = open("tmp", O_WRONLY | O_CREAT | O_APPEND, 0666);
+		// cmd3->input = "tmp";
+		// pid_t f = fork();
+		// if (f == 0)
+		// {
+		// 	while (1)
+		// 	{
+		// 		if (ft_strncmp(newline, "eof", 3) != 0)
+		// 		{
+		// 			newline = readline("> ");
+		// 			if (newline == NULL)
+		// 				break ;
+		// 			else if (ft_strncmp(newline, "eof", 3) != 0)
+		// 			{
+		// 				write(fd, newline, ft_strlen(newline));
+		// 				write(fd, "\n", 1);
+		// 			}
+		// 		}
+		// 		else
+		// 			break ;
+		// 	}
+		// 	exit(1);
+		// }
+		// else
+		// 	waitpid(f, NULL, 0);
+		// close(fd);
 		
 		//END OF HERE DOC TESTS
 
@@ -252,7 +252,7 @@ int	main(int argc, char *argv[], char **envp)
 		t_cmd *commands2[] = {cmd3, NULL};
 		exit_code = execute_pipes(commands2, envp);
 
-		unlink("tmp"); // PART OF HERE DOC TESTS
+		// unlink("tmp"); // PART OF HERE DOC TESTS
 
 
 		free(cmd1);
