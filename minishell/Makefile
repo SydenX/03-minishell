@@ -6,7 +6,7 @@
 #    By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/11/30 13:47:45 by jtollena          #+#    #+#              #
-#    Updated: 2024/02/05 10:25:08 by jtollena         ###   ########.fr        #
+#    Updated: 2024/02/06 13:47:51 by jtollena         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,7 +22,7 @@ SRCS = srcs/minishell.c \
 
 OBJS = $(SRCS:.c=.o)
 INCLUDES = includes
-FLAGS = #-Wall -Wextra -Werror
+FLAGS = #-Wall -Wextra -Werror 
 
 %.o: %.c
 	gcc $(FLAGS) -g -Ilibft -I/Users/jtollena/.brew/opt/readline/include -I$(INCLUDES) -c $< -o $@

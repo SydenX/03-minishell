@@ -6,13 +6,13 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/29 13:59:12 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/06 11:22:45 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/06 13:48:11 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	pwd(t_cmd *cmd)
+int	pwd(t_cmd *cmd)
 {
 	char	*cwd;
 
@@ -24,4 +24,5 @@ void	pwd(t_cmd *cmd)
 	}
 	else
 		exit_code = 1;
+	return (0);
 }

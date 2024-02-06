@@ -6,13 +6,13 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/29 13:58:03 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/06 11:23:23 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/06 13:05:47 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	cd(t_cmd *cmd)
+int	cd(t_cmd *cmd)
 {
 	// if (cmd->args == NULL)
 	// 	cd(getenv("HOME"));
@@ -23,4 +23,5 @@ void	cd(t_cmd *cmd)
 	// }
 	// else
 	// 	exit_code = 0;
+	return (0);
 }
