@@ -6,13 +6,13 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/30 11:26:48 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/01 13:47:30 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/06 11:22:33 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	env(char **envp)
+void	env(t_cmd *cmd, char **envp)
 {
 	int	i;
 

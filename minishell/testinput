@@ -1,1 +1,45 @@
-      44
+# **************************************************************************** #$
+#                                                                              #$
+#                                                         :::      ::::::::    #$
+#    Makefile                                           :+:      :+:    :+:    #$
+#                                                     +:+ +:+         +:+      #$
+#    By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+         #$
+#                                                 +#+#+#+#+#+   +#+            #$
+#    Created: 2023/11/30 13:47:45 by jtollena          #+#    #+#              #$
+#    Updated: 2024/02/05 10:25:08 by jtollena         ###   ########.fr        #$
+#                                                                              #$
+# **************************************************************************** #$
+$
+NAME = minishell$
+$
+SRCS = srcs/minishell.c \$
+		srcs/commands/pwd.c \$
+		srcs/commands/cd.c \$
+		srcs/commands/env.c \$
+		srcs/commands/exit.c \$
+		srcs/commands/echo.c \$
+		srcs/utils.c$
+$
+OBJS = $(SRCS:.c=.o)$
+INCLUDES = includes$
+FLAGS = #-Wall -Wextra -Werror$
+$
+%.o: %.c$
+	gcc $(FLAGS) -g -Ilibft -I/Users/jtollena/.brew/opt/readline/include -I$(INCLUDES) -c $< -o $@$
+$
+all: $(NAME)$
+$
+clean:$
+	rm $(OBJS)$
+	$
+$(NAME): $(OBJS) $(INCLUDES)$
+	make -C libft/$
+	gcc $(FLAGS) -g -Llibft -lft -L/Users/jtollena/.brew/opt/readline/lib -lreadline $(OBJS) -o $(NAME)$
+	make clean$
+$
+fclean: clean$
+	rm $(NAME)$
+$
+re: fclean $(NAME)$
+$
+.PHONY: re fclean clean all

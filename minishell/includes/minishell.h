@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:21 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/05 10:37:58 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/06 11:22:13 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,10 +20,11 @@
 # include <readline/readline.h>
 # include <readline/history.h>
 # include <fcntl.h>
+# include <termios.h>
 
 int exit_code;
 
-typedef struct	cmd {
+typedef struct	s_cmd {
 	char	*input;
 	char	*output;
 	char	*cmd;
@@ -32,11 +33,11 @@ typedef struct	cmd {
 }	t_cmd;
 
 //Built-in cmds
-void	pwd();
-void	cd(char *arg);
-void	env(char **envp);
-void	exit_builtin(char *line);
-void	echo(char **out, int has_param, char **env);
+void	pwd(t_cmd *cmd);
+void	cd(t_cmd *cmd);
+void	env(t_cmd *cmd, char **envp);
+void	exit_builtin(t_cmd *cmd);
+void	echo(t_cmd *cmd, char **env);
 int		replace(char **str, char to_replace, char replace_by);
 
 #endif

@@ -6,13 +6,13 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/29 13:59:12 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/05 10:51:01 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/06 11:22:45 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	pwd()
+void	pwd(t_cmd *cmd)
 {
 	char	*cwd;
 
