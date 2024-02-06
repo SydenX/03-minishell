@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:21 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/06 13:48:13 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/06 14:55:16 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,8 +33,8 @@ typedef struct	s_cmd {
 }	t_cmd;
 
 //Built-in cmds
-int		pwd(t_cmd *cmd);
-int		cd(t_cmd *cmd);
+int		pwd(t_cmd *cmd, char **envp);
+int		cd(t_cmd *cmd, char **envp);
 int		env(t_cmd *cmd, char **envp);
 int		exit_builtin(t_cmd *cmd);
 int		echo(t_cmd *cmd, char **env);

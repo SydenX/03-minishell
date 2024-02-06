@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/06 14:36:58 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/06 14:58:57 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,22 @@ void	execute_cmd_setup(char **firstcmdcpy, t_cmd *cmd, char ***path, char **cmdc
 	}
 }
 
+int	check_builtins(t_cmd *cmd, char **envp)
+{
+	if (ft_strncmp(cmd->cmd, "pwd", 3) == 0)
+		return (pwd(cmd, envp), 0);
+	else if (ft_strncmp(cmd->cmd, "cd", 2) == 0)
+		return (cd(cmd, envp), 0);
+	else if (ft_strncmp(cmd->cmd, "env", 3) == 0)
+		return (env(cmd, envp), 0);
+	else if (ft_strncmp(cmd->cmd, "export", 6) == 0)
+		return (echo(cmd, envp), 0);
+	else if (ft_strncmp(cmd->cmd, "echo", 4) == 0)
+		return (echo(cmd, envp), 0);
+	else
+		return (1);
+}
+
 int	execute_cmd(t_cmd *cmd, char **envp)
 {
 	char	**path;
@@ -64,15 +80,7 @@ int	execute_cmd(t_cmd *cmd, char **envp)
 	char	*firstjoin;
 	char	*firstcmdcpy;
 
-	// if (cmd->cmd == "pwd")
-	// 	pwd(cmd);
-	// if (cmd->cmd == "cd")
-	// 	cd(cmd);
-	// if (cmd->cmd == "env")
-	// 	env(cmd, envp);
-	if (ft_strncmp(cmd->cmd, "echo", 4) == 0)
-		echo(cmd, envp);
-	else
+	if (check_builtins(cmd, envp))
 	{
 		execve(cmd->cmd, cmd->args, envp);
 		i = 0;
@@ -201,8 +209,8 @@ int	main(int argc, char *argv[], char **envp)
 		cmd1->output = NULL;
 		cmd1->input = NULL;
 
-		cmd2->cmd = ft_strdup("echo");
-		cmd2->args = (char *[]){cmd2->cmd, "-->$?", NULL};
+		cmd2->cmd = ft_strdup("env");
+		cmd2->args = (char *[]){cmd2->cmd, NULL};
 		cmd2->flags = NULL;
 		cmd2->output = NULL;
 		cmd2->input = NULL;
@@ -247,10 +255,10 @@ int	main(int argc, char *argv[], char **envp)
 
 		// t_cmd *commands[] = {cmd1, NULL};
 		// exit_code = execute_pipes(commands, envp);
-		// t_cmd *commands1[] = {cmd2, NULL};
-		// exit_code = execute_pipes(commands1, envp);
-		t_cmd *commands2[] = {cmd3, NULL};
-		exit_code = execute_pipes(commands2, envp);
+		t_cmd *commands1[] = {cmd2, NULL};
+		exit_code = execute_pipes(commands1, envp);
+		// t_cmd *commands2[] = {cmd3, NULL};
+		// exit_code = execute_pipes(commands2, envp);
 
 		// unlink("tmp"); // PART OF HERE DOC TESTS
 
