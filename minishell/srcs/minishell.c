@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/06 14:58:57 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/07 13:01:40 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,6 +66,8 @@ int	check_builtins(t_cmd *cmd, char **envp)
 		return (env(cmd, envp), 0);
 	else if (ft_strncmp(cmd->cmd, "export", 6) == 0)
 		return (echo(cmd, envp), 0);
+	else if (ft_strncmp(cmd->cmd, "unset", 5) == 0)
+		return (unset(cmd, envp), 0);
 	else if (ft_strncmp(cmd->cmd, "echo", 4) == 0)
 		return (echo(cmd, envp), 0);
 	else
@@ -192,34 +194,41 @@ int	main(int argc, char *argv[], char **envp)
 
 	while (1)
 	{
-		char	*line = readline("[minishell] ");
+		char	*line = readline("\x1b[34;01m[MiniShell] \x1b[39;49;00m");
 		if (line == NULL)
 			break ;
 		add_history(line);
 		// execute_cmd(line, envp);
 
-		t_cmd *cmd1, *cmd2, *cmd3;
+		t_cmd *cmd1, *cmd2, *cmd3, *cmd4;
 		cmd1 = malloc(sizeof(t_cmd));
 		cmd2 = malloc(sizeof(t_cmd));
 		cmd3 = malloc(sizeof(t_cmd));
+		cmd4 = malloc(sizeof(t_cmd));
 
-		cmd1->cmd = ft_strdup("exit");
-		cmd1->args = (char *[]){cmd1->cmd, "1", "5", "a", NULL};
+		cmd1->cmd = ft_strdup("echo");
+		cmd1->args = (char *[]){cmd1->cmd, "\"with quotes we can echo\nseveral lines at a time\"", NULL};
 		cmd1->flags = NULL;
 		cmd1->output = NULL;
 		cmd1->input = NULL;
 
-		cmd2->cmd = ft_strdup("env");
+		cmd2->cmd = ft_strdup("sort");
 		cmd2->args = (char *[]){cmd2->cmd, NULL};
 		cmd2->flags = NULL;
 		cmd2->output = NULL;
 		cmd2->input = NULL;
 
-		cmd3->cmd = ft_strdup("./minishell");
-		cmd3->args = (char *[]){cmd3->cmd, NULL};
+		cmd3->cmd = ft_strdup("grep");
+		cmd3->args = (char *[]){cmd3->cmd, "-v", "SHLVL", NULL};
 		cmd3->flags = NULL;
 		cmd3->output = NULL;
 		cmd3->input = NULL;
+
+		cmd4->cmd = ft_strdup("grep");
+		cmd4->args = (char *[]){cmd4->cmd, "-v", "_=", NULL};
+		cmd4->flags = NULL;
+		cmd4->output = NULL;
+		cmd4->input = NULL;
 
 		// HERE DOC TESTS
 		// char *newline;
@@ -253,10 +262,10 @@ int	main(int argc, char *argv[], char **envp)
 		
 		//END OF HERE DOC TESTS
 
-		// t_cmd *commands[] = {cmd1, NULL};
-		// exit_code = execute_pipes(commands, envp);
-		t_cmd *commands1[] = {cmd2, NULL};
-		exit_code = execute_pipes(commands1, envp);
+		t_cmd *commands[] = {cmd1, NULL};
+		exit_code = execute_pipes(commands, envp);
+		// t_cmd *commands2[] = {cmd2, NULL};
+		// exit_code = execute_pipes(commands1, envp);
 		// t_cmd *commands2[] = {cmd3, NULL};
 		// exit_code = execute_pipes(commands2, envp);
 

@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/30 12:11:25 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/06 13:16:00 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/07 12:37:49 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ int	echo(t_cmd *cmd, char **env)
 				print(newarg, 1);
 			else
 				print(newarg, 0);
+			free(newarg);
 		}
 		else if (cmd->args[i][0] == '\'' && cmd->args[i][ft_strlen(cmd->args[i]) - 1] == '\'')
 			print(cmd->args[i], 1);

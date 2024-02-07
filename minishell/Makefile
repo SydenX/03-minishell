@@ -6,7 +6,7 @@
 #    By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/11/30 13:47:45 by jtollena          #+#    #+#              #
-#    Updated: 2024/02/06 13:47:51 by jtollena         ###   ########.fr        #
+#    Updated: 2024/02/07 12:20:32 by jtollena         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,6 +18,7 @@ SRCS = srcs/minishell.c \
 		srcs/commands/env.c \
 		srcs/commands/exit.c \
 		srcs/commands/echo.c \
+		srcs/commands/unset.c \
 		srcs/utils.c
 
 OBJS = $(SRCS:.c=.o)
