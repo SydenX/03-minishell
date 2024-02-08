@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/08 12:19:35 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/08 16:51:13 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,38 +173,166 @@ int	execute_pipes(t_cmd **cmd, char **env)
 					close(custominput);
 				fdd = fd[0];
 			}
+			if (cmd[i]->has_heredoc)
+				unlink(cmd[i]->input);
 		}
 		i++;
 	}
 	return (((code >> 8) & 0x000000ff));
 }
 
-// int	execute_subshell(t_cmd **cmd, char **env)
-// {
-// 	pid_t	pid;
-// 	int		code;
-// 	int fd[2];
-
-// 	pipe(fd);
-// 	pid = fork();
-// 	if (pid == 0)
-// 	{
-// 		// dup2(fd[1], STDOUT_FILENO);
-// 		close(fd[0]);
-// 		exit(execute_pipes(cmd, env));
-// 	}
-// 	else
-// 	{
-// 		waitpid(pid, &code, 0);
-// 		close(fd[1]);
-// 	}
-// 	return (((code >> 8) & 0x000000ff));
-// }
-
-int	execute_single(t_cmd *cmd, char **env)
+int	cmd_size(t_cmd **cmd)
 {
-	t_cmd *commands[] = {cmd, NULL};
-	return (execute_pipes(commands, env));
+	int i = 0;
+	while (cmd[i] != NULL)
+		i++;
+	return (i);
+}
+
+int	execute_cmds(t_cmd **cmd, char **env)
+{
+	int	i = 0;
+	int j;
+	t_cmd	**next_pipe;
+
+	next_pipe = malloc(cmd_size(cmd) * sizeof(t_cmd *));
+	if (next_pipe == NULL)
+		return (1);
+	while (cmd[i] != NULL)
+	{
+		if (cmd[i]->next_element == PIPE)
+		{
+			next_pipe[0] = cmd[i];
+			j = 1;
+			while (j + i < cmd_size(cmd) && cmd[j + i - 1]->next_element == PIPE)
+			{
+				next_pipe[j] = cmd[j + i];
+				j++;
+			}
+			i += j - 1;
+			next_pipe[j] = NULL;
+			exit_code = execute_pipes(next_pipe, env);
+		}
+		else if (cmd[i]->next_element == AND)
+		{
+			next_pipe[0] = cmd[i++];
+			next_pipe[1] = NULL;
+			exit_code = execute_pipes(next_pipe, env);
+			if (exit_code == 0)
+			{
+				next_pipe[0] = cmd[i];
+				next_pipe[1] = NULL;
+				exit_code = execute_pipes(next_pipe, env);
+			}
+		}
+		else if (cmd[i]->next_element == OR)
+		{
+			next_pipe[0] = cmd[i++];
+			next_pipe[1] = NULL;
+			exit_code = execute_pipes(next_pipe, env);
+			if (exit_code > 0)
+			{
+				next_pipe[0] = cmd[i];
+				next_pipe[1] = NULL;
+				exit_code = execute_pipes(next_pipe, env);
+			}
+		}
+		else
+		{
+			next_pipe[0] = cmd[i];
+			next_pipe[1] = NULL;
+			exit_code = execute_pipes(next_pipe, env);
+		}
+		i++;
+	}
+	return (0);
+}
+
+int	read_heredoc(t_cmd **cmd)
+{
+	int	i;
+
+	i = 0;
+	while (cmd[i] != NULL)
+	{
+		if (cmd[i]->has_heredoc)
+		{
+			char *newline;
+			newline = ft_strdup("");
+			if (newline == NULL)
+				exit(1);
+			char *tmpname;
+			tmpname = ft_strdup("./tmp/i");
+			if (tmpname == NULL)
+				return (free(newline), exit(1), 1);
+			char *tmpaddon;
+			tmpaddon = ft_strdup(".i");
+			if (tmpname == NULL)
+				return (free(tmpname), free(newline), exit(1), 1);
+			int j = 0;
+			while (!access(tmpname, F_OK))
+			{
+				tmpname = ft_strjoin(tmpname, tmpaddon);
+				if (tmpname == NULL)
+					return (free(newline), exit(1), 1);
+				j++;
+			}
+			int fd = open(tmpname, O_WRONLY | O_CREAT | O_APPEND, 0666);
+			cmd[i]->input = tmpname;
+			pid_t f = fork();
+			if (f == 0)
+			{
+				while (1)
+				{
+					if (ft_strncmp(newline, "eof", 3) != 0)
+					{
+						newline = readline("> ");
+						if (newline == NULL)
+							break ;
+						else if (ft_strncmp(newline, "eof", 3) != 0)
+						{
+							write(fd, newline, ft_strlen(newline));
+							write(fd, "\n", 1);
+						}
+					}
+					else
+						break ;
+				}
+				exit(1);
+			}
+			else
+				waitpid(f, NULL, 0);
+			close(fd);
+		}
+		i++;
+	}
+	return (0);
+}
+
+int	execute_subshell(t_subshell **subshell, char **env)
+{
+	int	i = 0;
+	int j;
+
+	while (subshell[i] != NULL)
+	{
+		if (subshell[i]->next_element == AND)
+		{
+			execute_cmds(subshell[i++]->cmds, env);
+			if (exit_code == 0)
+				execute_cmds(subshell[i]->cmds, env);
+		}
+		else if (subshell[i]->next_element == AND)
+		{
+			execute_cmds(subshell[i++]->cmds, env);
+			if (exit_code > 0)
+				execute_cmds(subshell[i]->cmds, env);
+		}
+		else
+			execute_cmds(subshell[i]->cmds, env);
+		i++;
+	}
+	return (0);
 }
 
 int	main(int argc, char *argv[], char **envp)
@@ -234,23 +362,32 @@ int	main(int argc, char *argv[], char **envp)
 		cmd3 = malloc(sizeof(t_cmd));
 		cmd4 = malloc(sizeof(t_cmd));
 
+		t_subshell *sub1, *sub2;
+		sub1 = malloc(sizeof(t_subshell));
+		sub2 = malloc(sizeof(t_subshell));
+
 		cmd1->cmd = ft_strdup("echo");
-		cmd1->args = (char *[]){cmd1->cmd, "\"with quotes we can echo\nseveral lines at a time\"", NULL};
+		cmd1->args = (char *[]){cmd1->cmd, "coucou", NULL};
 		cmd1->flags = NULL;
 		cmd1->output = NULL;
 		cmd1->input = NULL;
+		cmd1->next_element = AND;
+		// cmd1->has_heredoc = 1;
 
-		cmd2->cmd = ft_strdup("cat");
-		cmd2->args = (char *[]){cmd2->cmd, "o.txt", NULL};
+		cmd2->cmd = ft_strdup("echo");
+		cmd2->args = (char *[]){cmd2->cmd, "blabla", NULL};
 		cmd2->flags = NULL;
 		cmd2->output = NULL;
 		cmd2->input = NULL;
+		cmd2->next_element = NOTSET;
+		// cmd2->has_heredoc = 1;
 
 		cmd3->cmd = ft_strdup("echo");
-		cmd3->args = (char *[]){cmd3->cmd, "coucou\n", "SHLVL", NULL};
+		cmd3->args = (char *[]){cmd3->cmd, "$?", NULL};
 		cmd3->flags = NULL;
 		cmd3->output = NULL;
 		cmd3->input = NULL;
+		cmd3->next_element = NOTSET;
 
 		cmd4->cmd = ft_strdup("grep");
 		cmd4->args = (char *[]){cmd4->cmd, "-v", "_=", NULL};
@@ -258,80 +395,54 @@ int	main(int argc, char *argv[], char **envp)
 		cmd4->output = NULL;
 		cmd4->input = NULL;
 
-		// HERE DOC TESTS
-		// char *newline;
-		// newline = ft_strdup("");
-		// int fd = open("tmp", O_WRONLY | O_CREAT | O_APPEND, 0666);
-		// cmd3->input = "tmp";
-		// pid_t f = fork();
-		// if (f == 0)
-		// {
-		// 	while (1)
-		// 	{
-		// 		if (ft_strncmp(newline, "eof", 3) != 0)
-		// 		{
-		// 			newline = readline("> ");
-		// 			if (newline == NULL)
-		// 				break ;
-		// 			else if (ft_strncmp(newline, "eof", 3) != 0)
-		// 			{
-		// 				write(fd, newline, ft_strlen(newline));
-		// 				write(fd, "\n", 1);
-		// 			}
-		// 		}
-		// 		else
-		// 			break ;
-		// 	}
-		// 	exit(1);
-		// }
-		// else
-		// 	waitpid(f, NULL, 0);
-		// close(fd);
-		
-		//END OF HERE DOC TESTS
-
 		// t_cmd *commands1[] = {cmd2, cmd3, NULL};
 		// exit_code = execute_subshell(commands1, envp);
 		t_cmd *commands[] = {cmd1, cmd2, NULL};
+		t_cmd *commands2[] = {cmd3, NULL};
 
-		t_node node;
-		node.cmd = commands;
-		node.type = AND;
+		sub1->cmds = commands;
+		sub1->next_element = OR;
+		sub2->cmds = commands2;
+		sub2->next_element = NOTSET;
 
-		if (node.type == PIPE)
-			exit_code = execute_pipes(commands, envp);
-		else if (node.type == AND)
-		{
-			int i = 0;
-			while (node.cmd[i] != NULL)
-			{
-				if (exit_code == 0)
-					exit_code = execute_single(node.cmd[i++], envp);
-				else
-					break ;
-			}
-		}
-		else if (node.type == OR)
-		{
-			int i = 0;
-			exit_code = execute_single(node.cmd[i++], envp);
-			while (node.cmd[i] != NULL)
-			{
-				if (exit_code != 0)
-					exit_code = execute_single(node.cmd[i++], envp);
-				else
-					break ;
-			}
-		}
+		t_subshell *subs[] = {sub1, sub2, NULL};
+		execute_subshell(subs, envp);
+		// read_heredoc(commands);
+		// execute_cmds(commands, envp);
+
+		// t_node node;
+		// node.cmd = commands;
+		// node.type = AND;
+
+		// if (node.type == PIPE)
+		// 	exit_code = execute_pipes(commands, envp);
+		// else if (node.type == AND)
+		// {
+		// 	int i = 0;
+		// 	while (node.cmd[i] != NULL)
+		// 	{
+		// 		if (exit_code == 0)
+		// 			exit_code = execute_single(node.cmd[i++], envp);
+		// 		else
+		// 			break ;
+		// 	}
+		// }
+		// else if (node.type == OR)
+		// {
+		// 	int i = 0;
+		// 	exit_code = execute_single(node.cmd[i++], envp);
+		// 	while (node.cmd[i] != NULL)
+		// 	{
+		// 		if (exit_code != 0)
+		// 			exit_code = execute_single(node.cmd[i++], envp);
+		// 		else
+		// 			break ;
+		// 	}
+		// }
 		// t_cmd *commands2[] = {cmd3, NULL};
 		// exit_code = execute_pipes(commands2, envp);
 
 		// unlink("tmp"); // PART OF HERE DOC TESTS
-
-
-		free(cmd1);
-		free(cmd2);
-		free(cmd3);
 	}
 	return (0);
 }

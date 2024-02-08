@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:21 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/08 12:13:53 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/08 16:38:42 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,8 @@ int exit_code;
 typedef enum	e_type {
 	PIPE,
 	AND,
-	OR
+	OR,
+	NOTSET
 }	t_type;
 
 typedef struct	s_cmd {
@@ -36,7 +37,16 @@ typedef struct	s_cmd {
 	char	*cmd;
 	char	**flags;
 	char	**args;
+	int		has_heredoc;
+	t_type	next_element;
 }	t_cmd;
+
+typedef struct s_subshell {
+	t_cmd		**cmds;
+	t_type		next_element;
+	int			has_heredoc;
+}	t_subshell;
+
 
 typedef struct	s_node {
 	t_cmd	**cmd;
