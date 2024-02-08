@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/30 11:38:56 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/06 14:52:06 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/08 12:02:27 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ int	export(t_cmd *cmd, char **envp)
 	i = 0;
 	while (envp[i] != 0)
 	{
-		printf("%s=%s\n", envp[i] ,getenv(envp[i]));
+		printf("%s=%s\n", envp[i], getenv(envp[i]));
 		i++;
 	}
 	exit_code = 0;

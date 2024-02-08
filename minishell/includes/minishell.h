@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:21 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/07 12:20:24 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/08 12:13:53 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,12 @@
 
 int exit_code;
 
+typedef enum	e_type {
+	PIPE,
+	AND,
+	OR
+}	t_type;
+
 typedef struct	s_cmd {
 	char	*input;
 	char	*output;
@@ -31,6 +37,11 @@ typedef struct	s_cmd {
 	char	**flags;
 	char	**args;
 }	t_cmd;
+
+typedef struct	s_node {
+	t_cmd	**cmd;
+	t_type	type;
+}	t_node;
 
 //Built-in cmds
 int		pwd(t_cmd *cmd, char **envp);

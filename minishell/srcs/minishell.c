@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/07 13:01:40 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/08 12:19:35 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -179,6 +179,34 @@ int	execute_pipes(t_cmd **cmd, char **env)
 	return (((code >> 8) & 0x000000ff));
 }
 
+// int	execute_subshell(t_cmd **cmd, char **env)
+// {
+// 	pid_t	pid;
+// 	int		code;
+// 	int fd[2];
+
+// 	pipe(fd);
+// 	pid = fork();
+// 	if (pid == 0)
+// 	{
+// 		// dup2(fd[1], STDOUT_FILENO);
+// 		close(fd[0]);
+// 		exit(execute_pipes(cmd, env));
+// 	}
+// 	else
+// 	{
+// 		waitpid(pid, &code, 0);
+// 		close(fd[1]);
+// 	}
+// 	return (((code >> 8) & 0x000000ff));
+// }
+
+int	execute_single(t_cmd *cmd, char **env)
+{
+	t_cmd *commands[] = {cmd, NULL};
+	return (execute_pipes(commands, env));
+}
+
 int	main(int argc, char *argv[], char **envp)
 {
 	struct termios term;
@@ -212,14 +240,14 @@ int	main(int argc, char *argv[], char **envp)
 		cmd1->output = NULL;
 		cmd1->input = NULL;
 
-		cmd2->cmd = ft_strdup("sort");
-		cmd2->args = (char *[]){cmd2->cmd, NULL};
+		cmd2->cmd = ft_strdup("cat");
+		cmd2->args = (char *[]){cmd2->cmd, "o.txt", NULL};
 		cmd2->flags = NULL;
 		cmd2->output = NULL;
 		cmd2->input = NULL;
 
-		cmd3->cmd = ft_strdup("grep");
-		cmd3->args = (char *[]){cmd3->cmd, "-v", "SHLVL", NULL};
+		cmd3->cmd = ft_strdup("echo");
+		cmd3->args = (char *[]){cmd3->cmd, "coucou\n", "SHLVL", NULL};
 		cmd3->flags = NULL;
 		cmd3->output = NULL;
 		cmd3->input = NULL;
@@ -262,10 +290,39 @@ int	main(int argc, char *argv[], char **envp)
 		
 		//END OF HERE DOC TESTS
 
-		t_cmd *commands[] = {cmd1, NULL};
-		exit_code = execute_pipes(commands, envp);
-		// t_cmd *commands2[] = {cmd2, NULL};
-		// exit_code = execute_pipes(commands1, envp);
+		// t_cmd *commands1[] = {cmd2, cmd3, NULL};
+		// exit_code = execute_subshell(commands1, envp);
+		t_cmd *commands[] = {cmd1, cmd2, NULL};
+
+		t_node node;
+		node.cmd = commands;
+		node.type = AND;
+
+		if (node.type == PIPE)
+			exit_code = execute_pipes(commands, envp);
+		else if (node.type == AND)
+		{
+			int i = 0;
+			while (node.cmd[i] != NULL)
+			{
+				if (exit_code == 0)
+					exit_code = execute_single(node.cmd[i++], envp);
+				else
+					break ;
+			}
+		}
+		else if (node.type == OR)
+		{
+			int i = 0;
+			exit_code = execute_single(node.cmd[i++], envp);
+			while (node.cmd[i] != NULL)
+			{
+				if (exit_code != 0)
+					exit_code = execute_single(node.cmd[i++], envp);
+				else
+					break ;
+			}
+		}
 		// t_cmd *commands2[] = {cmd3, NULL};
 		// exit_code = execute_pipes(commands2, envp);
 
