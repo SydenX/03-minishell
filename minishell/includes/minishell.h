@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:21 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/08 16:38:42 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/09 13:14:21 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,7 @@ typedef struct	s_cmd {
 	char	**flags;
 	char	**args;
 	int		has_heredoc;
+	char	*heredoc;
 	t_type	next_element;
 }	t_cmd;
 
@@ -45,13 +46,11 @@ typedef struct s_subshell {
 	t_cmd		**cmds;
 	t_type		next_element;
 	int			has_heredoc;
+	char		*heredoc;
+	char		*input;
+	char		*output;
+	int			*fd;
 }	t_subshell;
-
-
-typedef struct	s_node {
-	t_cmd	**cmd;
-	t_type	type;
-}	t_node;
 
 //Built-in cmds
 int		pwd(t_cmd *cmd, char **envp);
@@ -61,5 +60,9 @@ int		unset(t_cmd *cmd, char **envp);
 int		exit_builtin(t_cmd *cmd);
 int		echo(t_cmd *cmd, char **env);
 int		replace(char **str, char to_replace, char replace_by);
+
+//Heredoc
+t_cmd	**read_heredoc(t_cmd **cmd);
+t_subshell	**read_sub_heredoc(t_subshell **subshell);
 
 #endif
