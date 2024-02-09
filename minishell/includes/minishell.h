@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:21 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/09 13:14:21 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/09 14:10:50 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,17 +39,19 @@ typedef struct	s_cmd {
 	char	**args;
 	int		has_heredoc;
 	char	*heredoc;
-	t_type	next_element;
+	int		has_pipe;
+	t_type	previous_element;
 }	t_cmd;
 
 typedef struct s_subshell {
-	t_cmd		**cmds;
-	t_type		next_element;
-	int			has_heredoc;
-	char		*heredoc;
-	char		*input;
-	char		*output;
-	int			*fd;
+	t_cmd	**cmds;
+	int		has_pipe;
+	t_type	previous_element;
+	int		has_heredoc;
+	char	*heredoc;
+	char	*input;
+	char	*output;
+	int		*fd;
 }	t_subshell;
 
 //Built-in cmds

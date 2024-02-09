@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/09 13:24:44 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/09 15:35:41 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,7 +134,7 @@ int	execute_pipes(t_cmd **cmd, char **env, t_subshell *subshell)
 	while (cmd[i] != NULL) {
 		customoutput = -1;
 		custominput = -1;
-
+	
 		if (ft_strncmp(cmd[i]->cmd, "exit", 4) == 0)
 			return (exit_builtin(cmd[i]));
 		else
@@ -212,24 +212,22 @@ int	execute_cmds(t_cmd **cmd, char **env, t_subshell *subshell)
 		return (1);
 	while (cmd[i] != NULL)
 	{
-		if (cmd[i]->next_element == PIPE)
+		if (cmd[i]->has_pipe)
 		{
 			next_pipe[0] = cmd[i];
 			j = 1;
-			while (j + i < cmd_size(cmd) && cmd[j + i - 1]->next_element == PIPE)
+			while (j + i < cmd_size(cmd) && cmd[j + i - 1]->has_pipe)
 			{
 				next_pipe[j] = cmd[j + i];
 				j++;
 			}
 			i += j - 1;
 			next_pipe[j] = NULL;
+			j = 0;
 			exit_code = execute_pipes(next_pipe, env, subshell);
 		}
-		else if (cmd[i]->next_element == AND)
+		else if (cmd[i]->previous_element == AND)
 		{
-			next_pipe[0] = cmd[i++];
-			next_pipe[1] = NULL;
-			exit_code = execute_pipes(next_pipe, env, subshell);
 			if (exit_code == 0)
 			{
 				next_pipe[0] = cmd[i];
@@ -237,11 +235,8 @@ int	execute_cmds(t_cmd **cmd, char **env, t_subshell *subshell)
 				exit_code = execute_pipes(next_pipe, env, subshell);
 			}
 		}
-		else if (cmd[i]->next_element == OR)
+		else if (cmd[i]->previous_element == OR)
 		{
-			next_pipe[0] = cmd[i++];
-			next_pipe[1] = NULL;
-			exit_code = execute_pipes(next_pipe, env, subshell);
 			if (exit_code > 0)
 			{
 				next_pipe[0] = cmd[i];
@@ -336,25 +331,21 @@ int	execute_subshell(t_subshell **subshell, char **env)
 		return (1);
 	while (subshell[i] != NULL)
 	{
-		if (subshell[i]->next_element == AND)
+		if (subshell[i]->previous_element == AND)
 		{
-			execute_cmds(subshell[i]->cmds, env, subshell[i]);
-			i++;
 			if (exit_code == 0)
 				execute_cmds(subshell[i]->cmds, env, subshell[i]);
 		}
-		else if (subshell[i]->next_element == OR)
+		else if (subshell[i]->previous_element == OR)
 		{
-			execute_cmds(subshell[i]->cmds, env, subshell[i]);
-			i++;
 			if (exit_code > 0)
 				execute_cmds(subshell[i]->cmds, env, subshell[i]);
 		}
-		else if (subshell[i]->next_element == PIPE)
+		else if (subshell[i]->has_pipe)
 		{
 			next_pipe[0] = subshell[i];
 			j = 1;
-			while (j + i < subshell_size(subshell) && subshell[j + i - 1]->next_element == PIPE)
+			while (j + i < subshell_size(subshell) && subshell[j + i - 1]->has_pipe)
 			{
 				next_pipe[j] = subshell[j + i];
 				j++;
@@ -389,68 +380,148 @@ int	main(int argc, char *argv[], char **envp)
 		if (line == NULL)
 			break ;
 		add_history(line);
-		// execute_cmd(line, envp);
 
-		t_cmd *cmd1, *cmd2, *cmd3, *cmd4;
-		cmd1 = malloc(sizeof(t_cmd));
-		cmd2 = malloc(sizeof(t_cmd));
-		cmd3 = malloc(sizeof(t_cmd));
-		cmd4 = malloc(sizeof(t_cmd));
-
+		// char	**split = ft_split(line, ' ');
+		int j = 0;
+		int l = 0;
 		t_subshell *sub1, *sub2;
-		sub1 = malloc(sizeof(t_subshell));
-		sub2 = malloc(sizeof(t_subshell));
+		// sub1 = malloc(sizeof(t_subshell));
+		// sub1->cmds = malloc(50 * sizeof(t_cmd *));
+		// while (split[j] != 0)
+		// {
+		// 	t_cmd *cmd;
+		// 	cmd = malloc(sizeof(t_cmd));
+		// 	cmd->args = malloc(100 * sizeof(char *));
+		// 	cmd->previous_element = NOTSET;
+		// 	if (j > 0)
+		// 	{
+		// 		if(ft_strncmp(split[j], "&&", 2) == 0)
+		// 		{
+		// 			j++;
+		// 			cmd->previous_element = AND;
+		// 		}
+		// 		if(ft_strncmp(split[j], "||", 2) == 0)
+		// 		{
+		// 			j++;
+		// 			cmd->previous_element = OR;
+		// 		}
+		// 	}
+		// 	if (split[j] == 0)
+		// 		break ;
+		// 	cmd->cmd = split[j++];
+		// 	int k = 0;
+		// 	cmd->args[k++] = cmd->cmd;
+		// 	while(split[j] != 0 && ft_strncmp(split[j], "&&", 2) != 0 && ft_strncmp(split[j], "||", 2) != 0)
+		// 	{
+		// 		if (split[j][0] == '|' && ft_strlen(split[j]) == 1)
+		// 		{
+		// 			cmd->has_pipe = 1;
+		// 			j++;
+		// 			break;
+		// 		}
+		// 		else
+		// 			cmd->args[k++] = split[j++];
+		// 	}
+		// 	cmd->args[k] = NULL;
+		// 	cmd->has_heredoc = 0;
+		// 	cmd->flags = NULL;
+		// 	cmd->output = NULL;
+		// 	cmd->input = NULL;
+		// 	cmd->previous_element = NOTSET;
+		// 	sub1->cmds[l++] = cmd;
+		// 	if (split[j] == 0)
+		// 		break ;
+		// 	// free(cmd);
+		// }
+		// sub1->cmds[l] = NULL;
+		// sub1->has_heredoc = 0;
+		t_cmd *cmd1, *cmd2, *cmd3, *cmd4, *cmd5;
+		cmd1 = malloc(sizeof(t_cmd *));
+		cmd2 = malloc(sizeof(t_cmd *));
+		// cmd3 = malloc(sizeof(t_cmd));
+		// cmd4 = malloc(sizeof(t_cmd));
+		// cmd5 = malloc(sizeof(t_cmd));
 
-		cmd1->cmd = ft_strdup("cat");
-		cmd1->args = (char *[]){cmd1->cmd, NULL};
+		sub2 = malloc(sizeof(t_subshell *));
+		// sub3 = malloc(sizeof(t_subshell));
+
+		cmd1->cmd = ft_strdup("echo");
+		cmd1->args = (char *[]){cmd1->cmd, "1", NULL};
 		cmd1->flags = NULL;
 		cmd1->output = NULL;
 		cmd1->input = NULL;
-		cmd1->next_element = AND;
+		cmd1->previous_element = NOTSET;
+		cmd1->has_pipe = 1;
 		// cmd1->has_heredoc = 1;
 
-		cmd2->cmd = ft_strdup("cat");
+		cmd2->cmd = ft_strdup("wc");
 		cmd2->args = (char *[]){cmd2->cmd, NULL};
 		cmd2->flags = NULL;
 		cmd2->output = NULL;
 		cmd2->input = NULL;
-		cmd2->next_element = NOTSET;
-		cmd2->has_heredoc = 1;
+		cmd2->previous_element = NOTSET;
+		// // cmd2->has_heredoc = 1;
 
-		cmd3->cmd = ft_strdup("echo");
-		cmd3->args = (char *[]){cmd3->cmd, NULL};
-		cmd3->flags = NULL;
-		cmd3->output = NULL;
-		cmd3->input = NULL;
-		cmd3->next_element = NOTSET;
+		// cmd3->cmd = ft_strdup("echo");
+		// cmd3->args = (char *[]){cmd3->cmd, "3", NULL};
+		// cmd3->flags = NULL;
+		// cmd3->output = NULL;
+		// cmd3->input = NULL;
+		// cmd3->previous_element = NOTSET;
 
-		cmd4->cmd = ft_strdup("grep");
-		cmd4->args = (char *[]){cmd4->cmd, "-v", "_=", NULL};
-		cmd4->flags = NULL;
-		cmd4->output = NULL;
-		cmd4->input = NULL;
+		// cmd4->cmd = ft_strdup("echo");
+		// cmd4->args = (char *[]){cmd4->cmd, "4", NULL};
+		// cmd4->flags = NULL;
+		// cmd4->output = NULL;
+		// cmd4->input = NULL;
+		// cmd4->previous_element = AND;
 
-		// t_cmd *commands1[] = {cmd2, cmd3, NULL};
-		// exit_code = execute_subshell(commands1, envp);
-		t_cmd *commands[] = {cmd1, cmd2, NULL};
-		t_cmd *commands2[] = {cmd3, NULL};
+		// cmd5->cmd = ft_strdup("wc");
+		// cmd5->args = (char *[]){cmd5->cmd, NULL};
+		// cmd5->flags = NULL;
+		// cmd5->output = NULL;
+		// cmd5->input = NULL;
+		// cmd5->previous_element = NOTSET;
 
-		sub1->cmds = commands;
-		sub1->next_element = OR;
-		sub1->output = NULL;
-		sub1->input = NULL;
-		sub1->has_heredoc = 1;
+		// // t_cmd *commands1[] = {cmd2, cmd3, NULL};
+		// // exit_code = execute_subshell(commands1, envp);
+		// t_cmd *commands[] = {cmd1, cmd2, NULL};
+		t_cmd *commands2[] = {cmd1, cmd2, NULL};
+		// t_cmd *commands3[] = {cmd5, NULL};
+
+		// sub1->cmds = commands;
+		// sub1->output = NULL;
+		// sub1->input = NULL;
+
 		sub2->cmds = commands2;
-		sub2->next_element = NOTSET;
+		sub2->previous_element = NOTSET;
 		sub2->output = NULL;
 		sub2->input = NULL;
+		
+		// sub3->cmds = commands3;
+		// sub3->previous_element = OR;
+		// sub3->output = NULL;
+		// sub3->input = NULL;
 
 		t_subshell **subs;
-		subs = malloc(sizeof(t_subshell *) * 3);
-		subs[0] = sub1;
-		subs[1] = sub2;
-		subs[2] = NULL;
+		subs = malloc(sizeof(t_subshell *) * 2);
+		// subs[0] = sub1;
+		subs[0] = sub2;
+		// subs[2] = sub3;
+		subs[1] = NULL;
 		execute_subshell(subs, envp);
+		// free(sub1->cmds);
+		// free(sub1);
+		// free(subs);
+		// free(cmd1);
+		// free(cmd2);
+		// free(cmd3);
+		// free(cmd4);
+		// free(cmd5);
+		// free(sub1);
+		// free(sub2);
+		// free(sub3);
+		// free(subs);
 	}
 	return (0);
 }
