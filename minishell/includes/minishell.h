@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:21 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/09 14:10:50 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/12 12:38:20 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,27 +31,34 @@ typedef enum	e_type {
 	NOTSET
 }	t_type;
 
+typedef enum	e_output_type {
+	APPEND,
+	TRUNC
+}	t_output_type;
+
 typedef struct	s_cmd {
-	char	*input;
-	char	*output;
-	char	*cmd;
-	char	**flags;
-	char	**args;
-	int		has_heredoc;
-	char	*heredoc;
-	int		has_pipe;
-	t_type	previous_element;
+	char				*input;
+	char				*output;
+	char				*cmd;
+	char				**flags;
+	char				**args;
+	int					has_heredoc;
+	char				*heredoc;
+	int					has_pipe;
+	t_output_type		output_type;
+	t_type				previous_element;
 }	t_cmd;
 
 typedef struct s_subshell {
-	t_cmd	**cmds;
-	int		has_pipe;
-	t_type	previous_element;
-	int		has_heredoc;
-	char	*heredoc;
-	char	*input;
-	char	*output;
-	int		*fd;
+	t_cmd				**cmds;
+	int					has_pipe;
+	t_type				previous_element;
+	int					has_heredoc;
+	char				*heredoc;
+	char				*input;
+	char				*output;
+	t_output_type		output_type;
+	int					fd[2];
 }	t_subshell;
 
 //Built-in cmds

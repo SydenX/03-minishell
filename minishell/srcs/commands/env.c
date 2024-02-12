@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/30 11:26:48 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/06 14:56:03 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/12 10:31:15 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ int	env(t_cmd *cmd, char **envp)
 	i = 0;
 	while (envp[i] != 0)
 	{
-		printf("%s=%s\n", envp[i] ,getenv(envp[i]));
+		printf("%s=%s\n", envp[i], getenv(envp[i]));
 		i++;
 	}
 	exit(0);

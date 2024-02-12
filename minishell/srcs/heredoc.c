@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/09 13:13:40 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/09 13:14:00 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/12 12:40:24 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,12 +48,12 @@ t_cmd	**read_heredoc(t_cmd **cmd)
 			{
 				while (1)
 				{
-					if (ft_strncmp(newline, "eof", 3) != 0)
+					if (ft_strncmp(newline, cmd[i]->heredoc, 3) != 0)
 					{
 						newline = readline("> ");
 						if (newline == NULL)
 							break ;
-						else if (ft_strncmp(newline, "eof", 3) != 0)
+						else if (ft_strncmp(newline, cmd[i]->heredoc, 3) != 0)
 						{
 							write(fd, newline, ft_strlen(newline));
 							write(fd, "\n", 1);

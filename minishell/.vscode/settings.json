@@ -2,6 +2,7 @@
 	"files.associations": {
 		"readline.h": "c",
 		"history.h": "c",
-		"complex": "c"
+		"complex": "c",
+		"iterator": "c"
 	}
 }
