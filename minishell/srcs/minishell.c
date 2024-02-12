@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/12 12:59:39 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/12 13:39:14 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -374,6 +374,18 @@ void checkLeaks() {
 	system("leaks minishell");
 }
 
+void print_command_names(t_subshell **subs) {
+    // Parcourir tous les sous-shells jusqu'à trouver NULL
+    for (int i = 0; subs[i] != NULL; i++) {
+        printf("Sous-shell %d :\n", i + 1);
+        
+        // Parcourir toutes les commandes dans ce sous-shell
+        for (int j = 0; subs[i]->cmds[j] != NULL; j++) {
+            printf("  Commande %d : %s\n", j + 1, subs[i]->cmds[j]->cmd);
+        }
+    }
+}
+
 int	main(int argc, char *argv[], char **envp)
 {
 	struct termios term;
@@ -397,18 +409,39 @@ int	main(int argc, char *argv[], char **envp)
 		char	**split = ft_split(line, ' ');
 		int j = 0;
 		int l = 0;
-		t_subshell *sub1;
-		sub1 = malloc(sizeof(t_subshell)); // Correction de l'allocation
-		sub1->cmds = malloc(50 * sizeof(t_cmd)); // Correction de l'allocation
+		int	subcount = 0;
+		
+		t_subshell **subs;
+		subs = malloc(sizeof(t_subshell *) * 50);
+
 		t_type prev;
 		prev = NOTSET;
+		int current_sub = 0;
+		subs[current_sub] = malloc(sizeof(t_subshell)); // Correction de l'allocation
+		subs[current_sub]->cmds = malloc(50 * sizeof(t_cmd)); // Correction de l'allocation
 		while (split[j] != NULL) { // Utilisation de NULL au lieu de 0
+			if (split[j][0] == '(')
+			{
+				current_sub++;
+				subs[current_sub] = malloc(sizeof(t_subshell)); // Correction de l'allocation
+				subs[current_sub]->cmds = malloc(50 * sizeof(t_cmd)); // Correction de l'allocation
+				subcount++;
+				j++;
+			}
+			if (split[j][0] == ')')
+			{
+				subs[current_sub]->cmds[l] = NULL;
+				current_sub--;
+				j++;
+				if (split[j] == NULL)
+					break ;
+			}
 			t_cmd *cmd = malloc(sizeof(t_cmd));
 			cmd->cmd = strdup(split[j]);
 			cmd->args = malloc(50 * sizeof(char *));
 			int k = 0;
 			cmd->args[k++] = strdup(split[j++]); // Copier la première partie de la commande
-			while (split[j] != NULL && ft_strncmp(split[j], "&&", 2) != 0 && ft_strncmp(split[j], "||", 2) != 0) {
+			while (split[j] != NULL && ft_strncmp(split[j], "&&", 2) != 0 && ft_strncmp(split[j], "||", 2) != 0 && ft_strncmp(split[j], ")", 1) != 0) {
 				if (split[j][0] == '|' && ft_strlen(split[j]) == 1) {
 					cmd->has_pipe = 1;
 					j++;
@@ -434,7 +467,7 @@ int	main(int argc, char *argv[], char **envp)
 			}
 			cmd->previous_element = prev;
 			cmd->args[k] = NULL; // Terminer le tableau d'arguments
-			sub1->cmds[l++] = cmd;
+			subs[current_sub]->cmds[l++] = cmd;
 			if (split[j] != NULL)
 			{
 				if (ft_strncmp(split[j], "&&", 2) == 0 || ft_strncmp(split[j], "||", 2) == 0)
@@ -451,33 +484,32 @@ int	main(int argc, char *argv[], char **envp)
 					prev = NOTSET;
 			}
 		}
-		sub1->cmds[l] = NULL; // Terminer le tableau de commandes
-		sub1->has_heredoc = 0;
+		subs[subcount]->cmds[l] = NULL; // Terminer le tableau de commandes
+		subs[subcount]->has_heredoc = 0;
+		subs[subcount + 1] = NULL;
 
-		t_subshell **subs;
-		subs = malloc(sizeof(t_subshell *) * 2);
-		subs[0] = sub1;
-		subs[1] = NULL;
+		print_command_names(subs);
+
 		execute_subshell(subs, envp);
 
 		// Boucle de libération de la mémoire pour chaque commande
-		int i = 0;
-		while (sub1->cmds[i] != NULL) {
-			free(sub1->cmds[i]->cmd);
-			int p = 0;
-			while (sub1->cmds[i]->args[p] != NULL)
-				free(sub1->cmds[i]->args[p++]);
-			free(sub1->cmds[i]->args);
-			free(sub1->cmds[i]);
-			i++;
-		}
-		int k = 0;
-		while (split[k] != NULL)
-			free(split[k++]);
-		free(split);
-		free(sub1->cmds);
-		free(sub1);
-		free(subs);
+		// int i = 0;
+		// while (sub1->cmds[i] != NULL) {
+		// 	free(sub1->cmds[i]->cmd);
+		// 	int p = 0;
+		// 	while (sub1->cmds[i]->args[p] != NULL)
+		// 		free(sub1->cmds[i]->args[p++]);
+		// 	free(sub1->cmds[i]->args);
+		// 	free(sub1->cmds[i]);
+		// 	i++;
+		// }
+		// int k = 0;
+		// while (split[k] != NULL)
+		// 	free(split[k++]);
+		// free(split);
+		// free(sub1->cmds);
+		// free(sub1);
+		// free(subs);
 	}
 	return (0);
 }
