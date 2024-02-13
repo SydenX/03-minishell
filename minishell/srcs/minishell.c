@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/12 13:39:14 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/13 14:44:41 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -408,7 +408,7 @@ int	main(int argc, char *argv[], char **envp)
 
 		char	**split = ft_split(line, ' ');
 		int j = 0;
-		int l = 0;
+		int current_cmd = 0;
 		int	subcount = 0;
 		
 		t_subshell **subs;
@@ -426,11 +426,12 @@ int	main(int argc, char *argv[], char **envp)
 				subs[current_sub] = malloc(sizeof(t_subshell)); // Correction de l'allocation
 				subs[current_sub]->cmds = malloc(50 * sizeof(t_cmd)); // Correction de l'allocation
 				subcount++;
+				current_cmd = 0;
 				j++;
 			}
 			if (split[j][0] == ')')
 			{
-				subs[current_sub]->cmds[l] = NULL;
+				subs[current_sub]->cmds[current_cmd] = NULL;
 				current_sub--;
 				j++;
 				if (split[j] == NULL)
@@ -441,7 +442,7 @@ int	main(int argc, char *argv[], char **envp)
 			cmd->args = malloc(50 * sizeof(char *));
 			int k = 0;
 			cmd->args[k++] = strdup(split[j++]); // Copier la première partie de la commande
-			while (split[j] != NULL && ft_strncmp(split[j], "&&", 2) != 0 && ft_strncmp(split[j], "||", 2) != 0 && ft_strncmp(split[j], ")", 1) != 0) {
+			while (split[j] != NULL && ft_strncmp(split[j], "&&", 2) != 0 && ft_strncmp(split[j], "||", 2) != 0 && ft_strncmp(split[j], ")", 1) != 0 && ft_strncmp(split[j], "(", 1) != 0) {
 				if (split[j][0] == '|' && ft_strlen(split[j]) == 1) {
 					cmd->has_pipe = 1;
 					j++;
@@ -467,7 +468,7 @@ int	main(int argc, char *argv[], char **envp)
 			}
 			cmd->previous_element = prev;
 			cmd->args[k] = NULL; // Terminer le tableau d'arguments
-			subs[current_sub]->cmds[l++] = cmd;
+			subs[current_sub]->cmds[current_cmd++] = cmd;
 			if (split[j] != NULL)
 			{
 				if (ft_strncmp(split[j], "&&", 2) == 0 || ft_strncmp(split[j], "||", 2) == 0)
@@ -484,7 +485,7 @@ int	main(int argc, char *argv[], char **envp)
 					prev = NOTSET;
 			}
 		}
-		subs[subcount]->cmds[l] = NULL; // Terminer le tableau de commandes
+		subs[subcount]->cmds[current_cmd] = NULL; // Terminer le tableau de commandes
 		subs[subcount]->has_heredoc = 0;
 		subs[subcount + 1] = NULL;
 
