@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/13 14:44:41 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/23 12:15:56 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,17 +58,17 @@ void	execute_cmd_setup(char **firstcmdcpy, t_cmd *cmd, char ***path, char **cmdc
 
 int	check_builtins(t_cmd *cmd, char **envp)
 {
-	if (ft_strncmp(cmd->cmd, "pwd", 3) == 0)
+	if (ft_strncmp(cmd->cmd, "pwd", ft_strlen(cmd->cmd)) == 0)
 		return (pwd(cmd, envp), 0);
-	else if (ft_strncmp(cmd->cmd, "cd", 2) == 0)
+	else if (ft_strncmp(cmd->cmd, "cd", ft_strlen(cmd->cmd)) == 0)
 		return (cd(cmd, envp), 0);
-	else if (ft_strncmp(cmd->cmd, "env", 3) == 0)
+	else if (ft_strncmp(cmd->cmd, "env", ft_strlen(cmd->cmd)) == 0)
 		return (env(cmd, envp), 0);
-	else if (ft_strncmp(cmd->cmd, "export", 6) == 0)
+	else if (ft_strncmp(cmd->cmd, "export", ft_strlen(cmd->cmd)) == 0)
 		return (echo(cmd, envp), 0);
-	else if (ft_strncmp(cmd->cmd, "unset", 5) == 0)
+	else if (ft_strncmp(cmd->cmd, "unset", ft_strlen(cmd->cmd)) == 0)
 		return (unset(cmd, envp), 0);
-	else if (ft_strncmp(cmd->cmd, "echo", 4) == 0)
+	else if (ft_strncmp(cmd->cmd, "echo", ft_strlen(cmd->cmd)) == 0)
 		return (echo(cmd, envp), 0);
 	else
 		return (1);
@@ -121,9 +121,8 @@ int	execute_cmd(t_cmd *cmd, char **envp)
 	exit(127);
 }
 
-int	execute_pipes(t_cmd **cmd, char **env, t_subshell *subshell)
+int	execute_pipes(t_cmd **cmd, char **env, int	fd[2])
 {
-	// int fd[2];
 	int	i;
 	pid_t pid;
 	int fdd = 0;
@@ -139,7 +138,7 @@ int	execute_pipes(t_cmd **cmd, char **env, t_subshell *subshell)
 			return (exit_builtin(cmd[i]));
 		else
 		{
-			pipe(subshell->fd);
+			pipe(fd);
 			if (cmd[i]->input != NULL)
 				custominput = open(cmd[i]->input, O_RDONLY | O_CREAT, 0666);
 			if (i > 0 && custominput == -1)
@@ -159,21 +158,21 @@ int	execute_pipes(t_cmd **cmd, char **env, t_subshell *subshell)
 				else
 					dup2(fdd, STDIN_FILENO);
 				if (cmd[i + 1] != NULL) {
-					dup2(subshell->fd[1], STDOUT_FILENO);
+					dup2(fd[1], STDOUT_FILENO);
 				}
 				if (customoutput != -1)
 					dup2(customoutput, STDOUT_FILENO);
-				close(subshell->fd[0]);
+				close(fd[0]);
 				execute_cmd(cmd[i], env);
 			}
 			else {
 				waitpid(pid, &code, 0);
-				close(subshell->fd[1]);
+				close(fd[1]);
 				if (customoutput != -1)
 					close(customoutput);
 				if (custominput != -1)
 					close(custominput);
-				fdd = subshell->fd[0];
+				fdd = fd[0];
 			}
 			if (cmd[i]->has_heredoc)
 				unlink(cmd[i]->input);
@@ -191,18 +190,11 @@ int	cmd_size(t_cmd **cmd)
 	return (i);
 }
 
-int	subshell_size(t_subshell **subshell)
-{
-	int i = 0;
-	while (subshell[i] != NULL)
-		i++;
-	return (i);
-}
-
-int	execute_cmds(t_cmd **cmd, char **env, t_subshell *subshell)
+int	execute_cmds(t_cmd **cmd, char **env)
 {
 	int	i = 0;
 	int j;
+	int	fd[2];
 	t_cmd	**next_pipe;
 
 	next_pipe = malloc(cmd_size(cmd) * sizeof(t_cmd *));
@@ -223,7 +215,7 @@ int	execute_cmds(t_cmd **cmd, char **env, t_subshell *subshell)
 			}
 			i += j;
 			next_pipe[j] = NULL;
-			exit_code = execute_pipes(next_pipe, env, subshell);
+			exit_code = execute_pipes(next_pipe, env, fd);
 		}
 		else if (cmd[i]->previous_element == AND)
 		{
@@ -231,7 +223,7 @@ int	execute_cmds(t_cmd **cmd, char **env, t_subshell *subshell)
 			{
 				next_pipe[0] = cmd[i];
 				next_pipe[1] = NULL;
-				exit_code = execute_pipes(next_pipe, env, subshell);
+				exit_code = execute_pipes(next_pipe, env, fd);
 			}
 		}
 		else if (cmd[i]->previous_element == OR)
@@ -240,130 +232,14 @@ int	execute_cmds(t_cmd **cmd, char **env, t_subshell *subshell)
 			{
 				next_pipe[0] = cmd[i];
 				next_pipe[1] = NULL;
-				exit_code = execute_pipes(next_pipe, env, subshell);
+				exit_code = execute_pipes(next_pipe, env, fd);
 			}
 		}
 		else
 		{
 			next_pipe[0] = cmd[i];
 			next_pipe[1] = NULL;
-			exit_code = execute_pipes(next_pipe, env, subshell);
-		}
-		i++;
-	}
-	if (subshell->has_heredoc)
-		unlink(subshell->input);
-	return (free(next_pipe), 0);
-}
-
-int	execute_subshell_pipes(char **env, t_subshell **subshell)
-{
-	int	i;
-	pid_t pid;
-	int fdd = 0;
-	int	code;
-	int customoutput;
-	int custominput;
-
-	i = 0;
-	while (subshell[i] != NULL) {
-		customoutput = -1;
-		custominput = -1;
-		pipe(subshell[i]->fd);
-		if (subshell[i]->input != NULL)
-			custominput = open(subshell[i]->input, O_RDONLY | O_CREAT, 0666);
-		if (i > 0 && custominput == -1)
-			if (subshell[i - 1]->output != NULL)
-				custominput = open(subshell[i - 1]->output, O_RDONLY | O_CREAT, 0666);
-		if (subshell[i]->output != NULL)
-			customoutput = open(subshell[i]->output, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-		if ((pid = fork()) == -1) {
-			perror("fork");
-			return (1);
-		}
-		else if (pid == 0) {
-			if (custominput != -1)
-				dup2(custominput, STDIN_FILENO);
-			else
-				dup2(fdd, STDIN_FILENO);
-			if (subshell[i + 1] != NULL) {
-				dup2(subshell[i]->fd[1], STDOUT_FILENO);
-			}
-			if (customoutput != -1)
-				dup2(customoutput, STDOUT_FILENO);
-			close(subshell[i]->fd[0]);
-			exit_code = execute_cmds(subshell[i]->cmds, env, subshell[i]);
-			exit(exit_code);
-		}
-		else 
-		{
-			waitpid(pid, &code, 0);
-			close(subshell[i]->fd[1]);
-			if (customoutput != -1)
-				close(customoutput);
-			if (custominput != -1)
-				close(custominput);
-			fdd = subshell[i]->fd[0];
-		}
-		i++;
-	}
-	return (((code >> 8) & 0x000000ff));
-}
-
-int	execute_subshell(t_subshell **subshell, char **env)
-{
-	int	i = 0;
-	int j;
-	t_subshell	**next_pipe;
-
-	while (subshell[i] != NULL)
-	{
-		subshell[i]->cmds = read_heredoc(subshell[i]->cmds);
-		i++;
-	}
-	i = 0;
-	subshell = read_sub_heredoc(subshell);
-	next_pipe = malloc(subshell_size(subshell) * sizeof(t_subshell *));
-	if (next_pipe == NULL)
-		return (1);
-	while (subshell[i] != NULL)
-	{
-		if (subshell[i]->previous_element == AND)
-		{
-			if (exit_code == 0)
-			{
-				next_pipe[0] = subshell[i];
-				next_pipe[1] = 0;
-				exit_code = execute_subshell_pipes(env, next_pipe);
-			}
-		}
-		else if (subshell[i]->previous_element == OR)
-		{
-			if (exit_code > 0)
-			{
-				next_pipe[0] = subshell[i];
-				next_pipe[1] = 0;
-				exit_code = execute_subshell_pipes(env, next_pipe);
-			}
-		}
-		else if (subshell[i]->has_pipe)
-		{
-			next_pipe[0] = subshell[i];
-			j = 1;
-			while (j + i < subshell_size(subshell) && subshell[j + i - 1]->has_pipe)
-			{
-				next_pipe[j] = subshell[j + i];
-				j++;
-			}
-			i += j - 1;
-			next_pipe[j] = NULL;
-			exit_code = execute_subshell_pipes(env, next_pipe);
-		}
-		else
-		{
-			next_pipe[0] = subshell[i];
-			next_pipe[1] = 0;
-			exit_code = execute_subshell_pipes(env, next_pipe);
+			exit_code = execute_pipes(next_pipe, env, fd);
 		}
 		i++;
 	}
@@ -374,75 +250,89 @@ void checkLeaks() {
 	system("leaks minishell");
 }
 
-void print_command_names(t_subshell **subs) {
-    // Parcourir tous les sous-shells jusqu'à trouver NULL
-    for (int i = 0; subs[i] != NULL; i++) {
-        printf("Sous-shell %d :\n", i + 1);
-        
-        // Parcourir toutes les commandes dans ce sous-shell
-        for (int j = 0; subs[i]->cmds[j] != NULL; j++) {
-            printf("  Commande %d : %s\n", j + 1, subs[i]->cmds[j]->cmd);
-        }
-    }
+int	get_cmd_args_number(char **split, int j)
+{
+	int	current_args = 0;
+	while (split[j] != NULL && ft_strncmp(split[j], "&&", 2) != 0 && ft_strncmp(split[j], "||", 2) != 0) {
+		if (split[j][0] == '|' && ft_strlen(split[j]) == 1)
+			return (current_args);
+		else if (split[j][0] == '<' && ft_strlen(split[j]) == 1)
+			return (current_args);
+		else if (split[j][0] == '>' && ft_strlen(split[j]) == 1)
+			return (current_args);
+		else if (ft_strncmp(split[j], ">>", 2) == 0)
+			return (current_args);
+		else if (ft_strncmp(split[j], "<<", 2) == 0)
+			return (current_args);
+		current_args++;
+		j++;
+	}
+	return (current_args);
+}
+
+int	get_cmd_number(char **split)
+{
+	int current_cmd = 0;
+	int j = 0;
+	while (split[j] != NULL) {
+		int k = 0;
+		while (split[j] != NULL && ft_strncmp(split[j], "&&", 2) != 0 && ft_strncmp(split[j], "||", 2) != 0) {
+			if (split[j][0] == '|' && ft_strlen(split[j]) == 1) {
+				j++;
+				break ;
+			} else if (split[j][0] == '<' && ft_strlen(split[j]) == 1)
+				j++;
+			else if (split[j][0] == '>' && ft_strlen(split[j]) == 1)
+				j++;
+			else if (ft_strncmp(split[j], ">>", 2) == 0)
+				j++;
+			else if (ft_strncmp(split[j], "<<", 2) == 0)
+				j++;
+			else
+				j++;
+		}
+		current_cmd++;
+		if (split[j] != NULL)
+			if (ft_strncmp(split[j], "&&", 2) == 0 || ft_strncmp(split[j], "||", 2) == 0)
+				j++;
+	}
+	return (current_cmd);
 }
 
 int	main(int argc, char *argv[], char **envp)
 {
 	struct termios term;
-	t_cmd cmd1;
-	t_cmd cmd2;
-	t_cmd cmd3;
 	
 	setup_signals();
 
     tcgetattr(fileno(stdin), &term);
     term.c_lflag &= ~ECHOCTL;
     tcsetattr(fileno(stdin), 0, &term);
-	// atexit(checkLeaks);
-	while (1)
+	int it = 0;
+	while (it++ < 1)
 	{
-		char	*line = readline("\x1b[34;01m[MiniShell] \x1b[39;49;00m");
+		checkLeaks();
+		// char	*line = readline("\x1b[34;01m[MiniShell] \x1b[39;49;00m");
+		char *line = ft_strdup("echo 1 && echo 3 && cat << e");
 		if (line == NULL)
 			break ;
-		add_history(line);
+		// add_history(line);
 
 		char	**split = ft_split(line, ' ');
-		int j = 0;
-		int current_cmd = 0;
-		int	subcount = 0;
-		
-		t_subshell **subs;
-		subs = malloc(sizeof(t_subshell *) * 50);
-
+		int 	j = 0;
+		int 	current_cmd = 0;
+		int		subcount = 0;
 		t_type prev;
 		prev = NOTSET;
 		int current_sub = 0;
-		subs[current_sub] = malloc(sizeof(t_subshell)); // Correction de l'allocation
-		subs[current_sub]->cmds = malloc(50 * sizeof(t_cmd)); // Correction de l'allocation
-		while (split[j] != NULL) { // Utilisation de NULL au lieu de 0
-			if (split[j][0] == '(')
-			{
-				current_sub++;
-				subs[current_sub] = malloc(sizeof(t_subshell)); // Correction de l'allocation
-				subs[current_sub]->cmds = malloc(50 * sizeof(t_cmd)); // Correction de l'allocation
-				subcount++;
-				current_cmd = 0;
-				j++;
-			}
-			if (split[j][0] == ')')
-			{
-				subs[current_sub]->cmds[current_cmd] = NULL;
-				current_sub--;
-				j++;
-				if (split[j] == NULL)
-					break ;
-			}
+		t_cmd	**cmds = malloc((get_cmd_number(split) + 1) * sizeof(t_cmd *));
+		while (split[j] != NULL) {
 			t_cmd *cmd = malloc(sizeof(t_cmd));
-			cmd->cmd = strdup(split[j]);
-			cmd->args = malloc(50 * sizeof(char *));
+			cmd->cmd = ft_strdup(split[j]);
+			cmd->args = malloc((get_cmd_args_number(split, j) + 1) * sizeof(char *));
 			int k = 0;
-			cmd->args[k++] = strdup(split[j++]); // Copier la première partie de la commande
-			while (split[j] != NULL && ft_strncmp(split[j], "&&", 2) != 0 && ft_strncmp(split[j], "||", 2) != 0 && ft_strncmp(split[j], ")", 1) != 0 && ft_strncmp(split[j], "(", 1) != 0) {
+			cmd->args[k++] = ft_strdup(split[j++]);
+			while (split[j] != NULL && ft_strncmp(split[j], "&&", 2) != 0 && ft_strncmp(split[j], "||", 2) != 0) {
 				if (split[j][0] == '|' && ft_strlen(split[j]) == 1) {
 					cmd->has_pipe = 1;
 					j++;
@@ -462,13 +352,12 @@ int	main(int argc, char *argv[], char **envp)
 					j++;
 					cmd->heredoc = split[j++];
 					cmd->has_heredoc = 1;
-				} else {
-					cmd->args[k++] = strdup(split[j++]); // Copier les arguments suivants
-				}
+				} else
+					cmd->args[k++] = ft_strdup(split[j++]); // Copier les arguments suivants
 			}
 			cmd->previous_element = prev;
 			cmd->args[k] = NULL; // Terminer le tableau d'arguments
-			subs[current_sub]->cmds[current_cmd++] = cmd;
+			cmds[current_cmd++] = cmd;
 			if (split[j] != NULL)
 			{
 				if (ft_strncmp(split[j], "&&", 2) == 0 || ft_strncmp(split[j], "||", 2) == 0)
@@ -485,32 +374,23 @@ int	main(int argc, char *argv[], char **envp)
 					prev = NOTSET;
 			}
 		}
-		subs[subcount]->cmds[current_cmd] = NULL; // Terminer le tableau de commandes
-		subs[subcount]->has_heredoc = 0;
-		subs[subcount + 1] = NULL;
-
-		print_command_names(subs);
-
-		execute_subshell(subs, envp);
-
-		// Boucle de libération de la mémoire pour chaque commande
-		// int i = 0;
-		// while (sub1->cmds[i] != NULL) {
-		// 	free(sub1->cmds[i]->cmd);
-		// 	int p = 0;
-		// 	while (sub1->cmds[i]->args[p] != NULL)
-		// 		free(sub1->cmds[i]->args[p++]);
-		// 	free(sub1->cmds[i]->args);
-		// 	free(sub1->cmds[i]);
-		// 	i++;
-		// }
-		// int k = 0;
-		// while (split[k] != NULL)
-		// 	free(split[k++]);
-		// free(split);
-		// free(sub1->cmds);
-		// free(sub1);
-		// free(subs);
+		cmds[current_cmd] = NULL;
+		execute_cmds(cmds, envp);
+		int tt = 0;
+		while (split[tt] != NULL)
+			free(split[tt++]);
+		free(split);
+		tt = 0;
+		while (cmds[tt] != NULL)
+		{
+			int ttt = 0;
+			while (cmds[tt]->args[ttt] != NULL)
+				free(cmds[tt]->args[ttt++]);
+			free(cmds[tt]->cmd);
+			free(cmds[tt++]);
+		}
+		free(cmds);
+		free(line);
 	}
 	return (0);
 }

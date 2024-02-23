@@ -1,2 +1,4 @@
-o txt file content
-blup
+       1       1       2
+       1       1       2
+3
+3
