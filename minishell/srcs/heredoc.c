@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/09 13:13:40 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/23 12:48:46 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/23 13:08:40 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,30 +25,30 @@ t_cmd	**read_heredoc(t_cmd **cmd)
 			newline = ft_strdup("");
 			if (newline == NULL)
 				return (NULL);
-			// if (cmd[i]->overrite_heredoc == 5)
-			// {
-			// 	pid_t f = fork();
-			// 	if (f == 0)
-			// 	{
-			// 		while (1)
-			// 		{
-			// 			if (ft_strncmp(newline, cmd[i]->heredoc, ft_strlen(newline)) != 0)
-			// 			{
-			// 				newline = readline("> ");
-			// 				if (newline == NULL)
-			// 					break ;
-			// 			}
-			// 			else
-			// 				break ;
-			// 		}
-			// 		exit(1);
-			// 	}
-			// 	else
-			// 		waitpid(f, NULL, 0);
-			// 	cmd[i]->has_heredoc = 0;
-			// }
-			// else
-			// {
+			if (cmd[i]->overrite_heredoc)
+			{
+				pid_t f = fork();
+				if (f == 0)
+				{
+					while (1)
+					{
+						if (ft_strncmp(newline, cmd[i]->heredoc, ft_strlen(newline) + 1) != 0)
+						{
+							newline = readline("> ");
+							if (newline == NULL)
+								break ;
+						}
+						else
+							break ;
+					}
+					exit(1);
+				}
+				else
+					waitpid(f, NULL, 0);
+				cmd[i]->has_heredoc = 0;
+			}
+			else
+			{
 				char *tmpname;
 				tmpname = ft_strdup("./tmp/i");
 				if (tmpname == NULL)
@@ -68,7 +68,6 @@ t_cmd	**read_heredoc(t_cmd **cmd)
 					free(tmpnamecpy);
 					if (tmpname == NULL)
 						return (free(newline), free(tmpaddon) , NULL);
-					printf("%s\n", tmpname);
 					j++;
 				}
 				int fd = open(tmpname, O_WRONLY | O_CREAT | O_APPEND, 0666);
@@ -78,12 +77,12 @@ t_cmd	**read_heredoc(t_cmd **cmd)
 				{
 					while (1)
 					{
-						if (ft_strncmp(newline, cmd[i]->heredoc, ft_strlen(newline)) != 0)
+						if (ft_strncmp(newline, cmd[i]->heredoc, ft_strlen(newline) + 1) != 0)
 						{
 							newline = readline("> ");
 							if (newline == NULL)
 								break ;
-							else if (ft_strncmp(newline, cmd[i]->heredoc, ft_strlen(newline)) != 0)
+							else if (ft_strncmp(newline, cmd[i]->heredoc, ft_strlen(newline) + 1) != 0)
 							{
 								write(fd, newline, ft_strlen(newline));
 								write(fd, "\n", 1);
@@ -98,77 +97,10 @@ t_cmd	**read_heredoc(t_cmd **cmd)
 					waitpid(f, NULL, 0);
 				close(fd);
 				free(tmpaddon);
-			// }
+			}
 			free(newline);
 		}
 		i++;
 	}
 	return (cmd);
 }
-
-// t_subshell	**read_sub_heredoc(t_subshell **subshell)
-// {
-// 	int	i;
-
-// 	i = 0;
-// 	while (subshell[i] != NULL)
-// 	{
-// 		if (subshell[i]->has_heredoc)
-// 		{
-// 			char *newline;
-// 			newline = ft_strdup("");
-// 			if (newline == NULL)
-// 				return(subshell);
-// 			char *tmpname;
-// 			tmpname = ft_strdup("./tmp/i");
-// 			if (tmpname == NULL)
-// 				return (free(newline), exit(1), subshell);
-// 			char *tmpaddon;
-// 			tmpaddon = ft_strdup("i");
-// 			if (tmpname == NULL)
-// 				return (free(tmpname), free(newline), exit(1), subshell);
-// 			int j = 0;
-// 			while (!access(tmpname, F_OK))
-// 			{
-// 				tmpname = ft_strjoin(tmpname, tmpaddon);
-// 				if (tmpname == NULL)
-// 					return (free(newline), exit(1), subshell);
-// 				j++;
-// 			}
-// 			int fd = open(tmpname, O_WRONLY | O_CREAT | O_APPEND, 0666);
-// 			subshell[i]->input = tmpname;
-// 			j = 0;
-// 			while (subshell[i]->cmds[j] != NULL){
-// 				if (subshell[i]->cmds[j]->has_heredoc != 1 && subshell[i]->cmds[j]->input == NULL)
-// 					subshell[i]->cmds[j]->input = tmpname;
-// 				j++;
-// 			}
-// 			pid_t f = fork();
-// 			if (f == 0)
-// 			{
-// 				while (1)
-// 				{
-// 					if (ft_strncmp(newline, "eof", 3) != 0)
-// 					{
-// 						newline = readline("> ");
-// 						if (newline == NULL)
-// 							break ;
-// 						else if (ft_strncmp(newline, "eof", 3) != 0)
-// 						{
-// 							write(fd, newline, ft_strlen(newline));
-// 							write(fd, "\n", 1);
-// 						}
-// 					}
-// 					else
-// 						break ;
-// 				}
-// 				exit(1);
-// 			}
-// 			else
-// 				waitpid(f, NULL, 0);
-// 			close(fd);
-// 		}
-// 		i++;
-// 	}
-// 	return (subshell);
-// }

@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/23 12:41:55 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/23 13:08:05 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -174,8 +174,6 @@ int	execute_pipes(t_cmd **cmd, char **env, int	fd[2])
 					close(custominput);
 				fdd = fd[0];
 			}
-			if (cmd[i]->has_heredoc)
-				unlink(cmd[i]->input);
 		}
 		i++;
 	}
@@ -393,7 +391,7 @@ int	main(int argc, char *argv[], char **envp)
 					free(cmds[tt]->args[ttt++]);
 				free(cmds[tt]->args);
 			}
-			if (cmds[tt]->has_heredoc)
+			if (cmds[tt]->has_heredoc && !cmds[tt]->overrite_heredoc)
 			{
 				unlink(cmds[tt]->input);
 				if (cmds[tt]->input != NULL)
