@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/23 13:08:05 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/23 14:21:29 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -309,7 +309,7 @@ int	main(int argc, char *argv[], char **envp)
 	int it = 0;
 	while (1)
 	{
-		checkLeaks();
+		// checkLeaks();
 		char	*line = readline("\x1b[34;01m[MiniShell] \x1b[39;49;00m");
 		// char *line = ft_strdup("cat << e && wc << e");
 		if (line == NULL)
