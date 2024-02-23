@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:21 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/12 12:38:20 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/23 12:41:37 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ typedef struct	s_cmd {
 	char				**flags;
 	char				**args;
 	int					has_heredoc;
+	int					overrite_heredoc;
 	char				*heredoc;
 	int					has_pipe;
 	t_output_type		output_type;

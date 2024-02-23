@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/23 12:15:56 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/23 12:41:55 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -309,14 +309,14 @@ int	main(int argc, char *argv[], char **envp)
     term.c_lflag &= ~ECHOCTL;
     tcsetattr(fileno(stdin), 0, &term);
 	int it = 0;
-	while (it++ < 1)
+	while (1)
 	{
 		checkLeaks();
-		// char	*line = readline("\x1b[34;01m[MiniShell] \x1b[39;49;00m");
-		char *line = ft_strdup("echo 1 && echo 3 && cat << e");
+		char	*line = readline("\x1b[34;01m[MiniShell] \x1b[39;49;00m");
+		// char *line = ft_strdup("cat << e && wc << e");
 		if (line == NULL)
 			break ;
-		// add_history(line);
+		add_history(line);
 
 		char	**split = ft_split(line, ' ');
 		int 	j = 0;
@@ -340,6 +340,7 @@ int	main(int argc, char *argv[], char **envp)
 				} else if (split[j][0] == '<' && ft_strlen(split[j]) == 1) {
 					j++;
 					cmd->input = split[j++];
+					cmd->overrite_heredoc = 1;
 				} else if (split[j][0] == '>' && ft_strlen(split[j]) == 1) {
 					j++;
 					cmd->output = split[j++];
@@ -352,11 +353,12 @@ int	main(int argc, char *argv[], char **envp)
 					j++;
 					cmd->heredoc = split[j++];
 					cmd->has_heredoc = 1;
+					cmd->overrite_heredoc = 0;
 				} else
-					cmd->args[k++] = ft_strdup(split[j++]); // Copier les arguments suivants
+					cmd->args[k++] = ft_strdup(split[j++]);
 			}
 			cmd->previous_element = prev;
-			cmd->args[k] = NULL; // Terminer le tableau d'arguments
+			cmd->args[k] = NULL;
 			cmds[current_cmd++] = cmd;
 			if (split[j] != NULL)
 			{
@@ -375,7 +377,8 @@ int	main(int argc, char *argv[], char **envp)
 			}
 		}
 		cmds[current_cmd] = NULL;
-		execute_cmds(cmds, envp);
+		if (read_heredoc(cmds) != NULL)
+			execute_cmds(cmds, envp);
 		int tt = 0;
 		while (split[tt] != NULL)
 			free(split[tt++]);
@@ -384,13 +387,24 @@ int	main(int argc, char *argv[], char **envp)
 		while (cmds[tt] != NULL)
 		{
 			int ttt = 0;
-			while (cmds[tt]->args[ttt] != NULL)
-				free(cmds[tt]->args[ttt++]);
+			if (cmds[tt]->args != NULL)
+			{
+				while (cmds[tt]->args[ttt] != NULL)
+					free(cmds[tt]->args[ttt++]);
+				free(cmds[tt]->args);
+			}
+			if (cmds[tt]->has_heredoc)
+			{
+				unlink(cmds[tt]->input);
+				if (cmds[tt]->input != NULL)
+					free(cmds[tt]->input);
+			}
 			free(cmds[tt]->cmd);
 			free(cmds[tt++]);
 		}
 		free(cmds);
 		free(line);
 	}
+	checkLeaks();
 	return (0);
 }
