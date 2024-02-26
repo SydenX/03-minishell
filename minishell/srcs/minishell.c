@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:00 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/23 14:21:29 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/26 16:14:23 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,11 +139,14 @@ int	execute_pipes(t_cmd **cmd, char **env, int	fd[2])
 		else
 		{
 			pipe(fd);
+			
 			if (cmd[i]->input != NULL)
 				custominput = open(cmd[i]->input, O_RDONLY | O_CREAT, 0666);
+				
 			if (i > 0 && custominput == -1)
 				if (cmd[i - 1]->output != NULL)
 					custominput = open(cmd[i - 1]->output, O_RDONLY | O_CREAT, 0666);
+
 			if (cmd[i]->output != NULL && cmd[i]->output_type == TRUNC)
 				customoutput = open(cmd[i]->output, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 			if (cmd[i]->output != NULL && cmd[i]->output_type == APPEND)
@@ -185,7 +188,7 @@ int	cmd_size(t_cmd **cmd)
 	int i = 0;
 	while (cmd[i] != NULL)
 		i++;
-	return (i);
+	return (i + 1);
 }
 
 int	execute_cmds(t_cmd **cmd, char **env)
@@ -309,12 +312,11 @@ int	main(int argc, char *argv[], char **envp)
 	int it = 0;
 	while (1)
 	{
-		// checkLeaks();
 		char	*line = readline("\x1b[34;01m[MiniShell] \x1b[39;49;00m");
-		// char *line = ft_strdup("cat << e && wc << e");
 		if (line == NULL)
 			break ;
-		add_history(line);
+		if (ft_strncmp(line, "", ft_strlen(line)) != 0)
+			add_history(line);
 
 		char	**split = ft_split(line, ' ');
 		int 	j = 0;
@@ -330,7 +332,7 @@ int	main(int argc, char *argv[], char **envp)
 			cmd->args = malloc((get_cmd_args_number(split, j) + 1) * sizeof(char *));
 			int k = 0;
 			cmd->args[k++] = ft_strdup(split[j++]);
-			while (split[j] != NULL && ft_strncmp(split[j], "&&", 2) != 0 && ft_strncmp(split[j], "||", 2) != 0) {
+			while (split[j] != NULL && ft_strncmp(split[j], "&&", ft_strlen(split[j])) != 0 && ft_strncmp(split[j], "||", ft_strlen(split[j])) != 0) {
 				if (split[j][0] == '|' && ft_strlen(split[j]) == 1) {
 					cmd->has_pipe = 1;
 					j++;
@@ -349,6 +351,12 @@ int	main(int argc, char *argv[], char **envp)
 					cmd->output_type = APPEND;
 				} else if (ft_strncmp(split[j], "<<", 2) == 0) {
 					j++;
+					if (cmd->has_heredoc)
+					{
+						cmd->overrite_heredoc = 1;
+						read_single_heredoc(cmd);
+						cmd->overrite_heredoc = 0;
+					}
 					cmd->heredoc = split[j++];
 					cmd->has_heredoc = 1;
 					cmd->overrite_heredoc = 0;

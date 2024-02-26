@@ -6,7 +6,7 @@
 /*   By: jtollena <jtollena@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/23 12:58:21 by jtollena          #+#    #+#             */
-/*   Updated: 2024/02/23 13:02:15 by jtollena         ###   ########.fr       */
+/*   Updated: 2024/02/26 14:32:48 by jtollena         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,5 +61,6 @@ int		replace(char **str, char to_replace, char replace_by);
 
 //Heredoc
 t_cmd	**read_heredoc(t_cmd **cmd);
+t_cmd	*read_single_heredoc(t_cmd *cmd);
 
 #endif
